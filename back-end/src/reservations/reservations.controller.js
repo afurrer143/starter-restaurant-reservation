@@ -42,7 +42,8 @@ function hasProperties(...properties) {
 
     try {
       properties.forEach((property) => {
-        if (data[property] === undefined || data[property].length === 0) { //specifically testing for undefined cause for example people being 0 would make it falsy and error out here, rather than erroring out on peopleIsValidNumber. and second if statement is regex to remove empty spaces
+        if (data[property] === undefined || data[property].length === 0) {
+          //specifically testing for undefined cause for example people being 0 would make it falsy and error out here, rather than erroring out on peopleIsValidNumber. and second if statement is regex to remove empty spaces
           const error = new Error(`A '${property}' property is required.`);
           error.status = 400;
           throw error;
@@ -66,26 +67,28 @@ const hasRequiredProperties = hasProperties(
 );
 
 // Check if the date reservation is a date
-function reservation_dateIsDate (req, res, next) {
-  const date = req.body.data.reservation_date
-  let parsedDate = Date.parse(date) //if date is not valid, it become NaN, and this is pretty versataile on formatting any date format
+function reservation_dateIsDate(req, res, next) {
+  const date = req.body.data.reservation_date;
+  let parsedDate = Date.parse(date); //if date is not valid, it become NaN, and this is pretty versataile on formatting any date format
   // OKAY so I can not do parsedDate === NaN BUT NaN is not equal to itself...so i can do this
   if (parsedDate !== parsedDate) {
     return next({
       status: 400,
       message: `reservation_date is not formatted correctly`,
     });
-  } 
-  next()
+  }
+  next();
 }
 
 // Function time formatted correctly
-function reservation_timeIsTime (req, res, next) {
-  let time = req.body.data.reservation_time
-  let timeFormat = /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\.[0-9]{3})?)?\s?(AM|am|PM|pm)?$/ //regex for a format of a time value
+function reservation_timeIsTime(req, res, next) {
+  let time = req.body.data.reservation_time;
+  let timeFormat =
+    /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\.[0-9]{3})?)?\s?(AM|am|PM|pm)?$/; //regex for a format of a time value
   // probably went over kill on the reg ex. post SQL can accept a PM/AM or pm/am at end and convert. but not a p.m or P.M
-  if (timeFormat.test(time)) { //if time passes regex test, it is a valid time value
-    return next()
+  if (timeFormat.test(time)) {
+    //if time passes regex test, it is a valid time value
+    return next();
   }
   return next({
     status: 400,
@@ -94,9 +97,10 @@ function reservation_timeIsTime (req, res, next) {
 }
 
 // Function people is a number
-function peopleIsValidNumber (req, res, next) {
-  const people = req.body.data.people
-  if (typeof people !== "number") { // if people isnt number, error out
+function peopleIsValidNumber(req, res, next) {
+  const people = req.body.data.people;
+  if (typeof people !== "number") {
+    // if people isnt number, error out
     return next({
       status: 400,
       message: `people must be a number`,
@@ -109,43 +113,52 @@ function peopleIsValidNumber (req, res, next) {
       message: `people must be a positive number`,
     });
   }
-  next()
+  next();
 }
 
 // Check if the date reservation is a date
-function validDateQuery (date) {
-  let parsedDate = Date.parse(date) //if date is not valid, it become NaN, and this is pretty versataile on formatting any date format
+function validDateFormat(date) {
+  let parsedDate = Date.parse(date); //if date is not valid, it become NaN, and this is pretty versataile on formatting any date format
   // OKAY so I can not do parsedDate === NaN BUT NaN is not equal to itself...so i can do this
   if (parsedDate !== parsedDate) {
     // if parsed date in query is not date format, just return false and that will force list query to default to today
-    return false
-  } 
-  return true
+    return false;
+  }
+  return true;
 }
+
+// Need to check if date in query, is in past (no good), or is on a tuesday as restaurant is closed that day
+function validDateQuery(req, res, next) {}
 
 // ~~~~~~~~~~~~~~~~~~~~~ END POINTS ~~~~~~~~~~~~~~~~~~~~~
 
 // list returns entirety of reservation table
 // list also needs a thing if there a date param in url, it shows only reservations on that date
 async function list(req, res) {
-  const dateQueury = req.query.date 
+  const dateQueury = req.query.date;
 
-  if (dateQueury === "all") { //if i wanna see all reservations, can add ?date=all
+  if (dateQueury === "all") {
+    //if i wanna see all reservations, can add ?date=all
     const data = await reservationService.list();
     res.json({ data });
   }
   //it may need to be changed but even on ?date= it will be equal to null, which is falsy
-  else if (validDateQuery(dateQueury)) { //when date queury is valid date format, will get reservations on that day
-    // toLocaleString returns "1/31/2023, 11:04:05 AM" format. So I can just split and return index0 for date
-    let formattedDate = new Date(Date.parse(dateQueury)).toLocaleString('en-US', {timeZone: 'CST',}).split(',')[0] 
-    const data = await reservationService.listOnDate(formattedDate)
-    res.json({ data })
-  }
-  else {
+  else if (validDateFormat(dateQueury)) {
+    //when date queury is valid date format, will get reservations on that day
+    // just take the date they specify in query, cause if i convert it to my timezone, it will likely be on a day before (the date parse defauls to midnight, and central is a few hours behind UTC, so it goes back one day. No good)
+    let formattedDate = new Date(Date.parse(dateQueury))
+      .toISOString()
+      .slice(0, 10);
+    const data = await reservationService.listOnDate(formattedDate);
+    res.json({ data });
+  } else {
     // so when date query is either not specified or incorrect format show reservations for today
-    let today = new Date().toLocaleString('en-US', {timeZone: 'CST',}).split(',')[0] 
-    const data = await reservationService.listOnDate(today)
-    res.json({ data })
+    // toLocaleString returns "1/31/2023, 11:04:05 AM" format. So I can just split and return index0 for date
+    let today = new Date()
+      .toLocaleString("en-US", { timeZone: "CST" })
+      .split(",")[0];
+    const data = await reservationService.listOnDate(today);
+    res.json({ data });
   }
 }
 
@@ -157,5 +170,12 @@ async function create(req, res) {
 
 module.exports = {
   list: [asyncErrorBoundary(list)],
-  create: [hasOnlyValidProperties, hasRequiredProperties, reservation_dateIsDate, reservation_timeIsTime, peopleIsValidNumber, asyncErrorBoundary(create)],
+  create: [
+    hasOnlyValidProperties,
+    hasRequiredProperties,
+    reservation_dateIsDate,
+    reservation_timeIsTime,
+    peopleIsValidNumber,
+    asyncErrorBoundary(create),
+  ],
 };
