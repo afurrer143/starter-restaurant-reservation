@@ -94,7 +94,6 @@ function reservation_timeIsTime (req, res, next) {
 }
 
 // Function people is a number
-//
 function peopleIsValidNumber (req, res, next) {
   const people = req.body.data.people
   if (typeof people !== "number") { // if people isnt number, error out
@@ -110,16 +109,45 @@ function peopleIsValidNumber (req, res, next) {
       message: `people must be a positive number`,
     });
   }
-
   next()
+}
+
+// Check if the date reservation is a date
+function validDateQuery (date) {
+  let parsedDate = Date.parse(date) //if date is not valid, it become NaN, and this is pretty versataile on formatting any date format
+  // OKAY so I can not do parsedDate === NaN BUT NaN is not equal to itself...so i can do this
+  if (parsedDate !== parsedDate) {
+    // if parsed date in query is not date format, just return false and that will force list query to default to today
+    return false
+  } 
+  return true
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~ END POINTS ~~~~~~~~~~~~~~~~~~~~~
 
 // list returns entirety of reservation table
+// list also needs a thing if there a date param in url, it shows only reservations on that date
 async function list(req, res) {
-  const data = await reservationService.list();
-  res.json({ data });
+  const dateQueury = req.query.date 
+
+  if (dateQueury === "all") { //if i wanna see all reservations, can add ?date=all
+    const data = await reservationService.list();
+    res.json({ data });
+  }
+  //it may need to be changed but even on ?date= it will be equal to null, which is falsy
+  else if (validDateQuery(dateQueury)) { //when date queury is valid date format, will get reservations on that day
+    let formattedDate = new Date(Date.parse(dateQueury)).toISOString().slice(0, 10) //i probably dont have to, but i wanted to sanitize the input so the date format is consitent with the DB version
+    const data = await reservationService.listOnDate(formattedDate)
+    res.json({ data })
+    //so for now ONLY in the tests, data is an empty array
+  }
+  else {
+    // so when date query is either not specified or incorrect format show reservations for today
+    let today = new Date().toISOString().slice(0, 10)
+    // SOOO today does have the problem of I do not know what time zone it uses, and that can cause it to be a different day than it really is
+    const data = await reservationService.listOnDate(today)
+    res.json({ data })
+  }
 }
 
 // Create will insert a reservation from the req body data. And it is validated beforehand with middle ware to ensure its valid
