@@ -116,48 +116,58 @@ function peopleIsValidNumber(req, res, next) {
   next();
 }
 
-// Check if the date reservation is a date
-function validDateFormat(date) {
-  let parsedDate = Date.parse(date); //if date is not valid, it become NaN, and this is pretty versataile on formatting any date format
-  // OKAY so I can not do parsedDate === NaN BUT NaN is not equal to itself...so i can do this
-  if (parsedDate !== parsedDate) {
-    // if parsed date in query is not date format, just return false and that will force list query to default to today
-    return false;
-  }
-  return true;
+// Get today's date, formatted as only the date, and in central time zone
+function getTodayAsFormattedDate() {
+  let today = new Date();
+  today = today.toLocaleString("en-US", { timeZone: "CST" }).split(",")[0];
+  return today;
 }
 
 // Need to check if date in query, is in past (no good), or is on a tuesday as restaurant is closed that day
-function validDateQuery(req, res, next) {}
+function validDateQuery(req, res, next) {
+  let date = req.query.date;
+  let parsedDate = new Date(Date.parse(date)); //if date is not valid, it become NaN (or invalid date), and this is pretty versataile on formatting any date format
+
+  // I need to check if there is NOT a date query too, and if not default it to today
+  if (!date) {
+    res.locals.date = getTodayAsFormattedDate();
+    return next();
+  } else if (parsedDate !== parsedDate) {
+    //so I can not do parsedDate === NaN BUT NaN is not equal to itself...so i can do this
+    // this ends up checking if parsed date is recognized by Date.parse as a date
+    parsedDate = parsedDate.toISOString().slice(0, 10); //this is just to format it so it is consistent with everything else
+    res.locals.date = parsedDate;
+    return next();
+  } else {
+    // If I get here, it means the date query was not recognized as a date. I am just gonna console and error, and use today as a date value
+    console.error(
+      `Error on checking date query, reverting to default of today`
+    );
+    res.locals.date = getTodayAsFormattedDate();
+    return next();
+  }
+
+  // // as a fun bonus thing. A inncorrect date will return 'Invalid Date' which will always be falsy here
+  // if (today.setHours(0, 0, 0, 0) <= parsedDate.setHours(0, 0, 0, 0)) {
+  //   // format the date just so it is concistent
+  // }
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~ END POINTS ~~~~~~~~~~~~~~~~~~~~~
 
 // list returns entirety of reservation table
-// list also needs a thing if there a date param in url, it shows only reservations on that date
+// with helper functions above to get reservations on a day
 async function list(req, res) {
-  const dateQueury = req.query.date;
+  const dateQueury = res.locals.date;
 
-  if (dateQueury === "all") {
+  // i wanna also be able to see all reservation if i do ?date=all
+  if (req.query.date === "all") {
     //if i wanna see all reservations, can add ?date=all
     const data = await reservationService.list();
     res.json({ data });
-  }
-  //it may need to be changed but even on ?date= it will be equal to null, which is falsy
-  else if (validDateFormat(dateQueury)) {
-    //when date queury is valid date format, will get reservations on that day
-    // just take the date they specify in query, cause if i convert it to my timezone, it will likely be on a day before (the date parse defauls to midnight, and central is a few hours behind UTC, so it goes back one day. No good)
-    let formattedDate = new Date(Date.parse(dateQueury))
-      .toISOString()
-      .slice(0, 10);
-    const data = await reservationService.listOnDate(formattedDate);
-    res.json({ data });
   } else {
-    // so when date query is either not specified or incorrect format show reservations for today
-    // toLocaleString returns "1/31/2023, 11:04:05 AM" format. So I can just split and return index0 for date
-    let today = new Date()
-      .toLocaleString("en-US", { timeZone: "CST" })
-      .split(",")[0];
-    const data = await reservationService.listOnDate(today);
+    // when req query isnt all, we use listOnDate, and we get date query from validDateQuery
+    const data = await reservationService.listOnDate(dateQueury);
     res.json({ data });
   }
 }
@@ -169,7 +179,7 @@ async function create(req, res) {
 }
 
 module.exports = {
-  list: [asyncErrorBoundary(list)],
+  list: [validDateQuery, asyncErrorBoundary(list)],
   create: [
     hasOnlyValidProperties,
     hasRequiredProperties,
