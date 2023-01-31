@@ -136,15 +136,14 @@ async function list(req, res) {
   }
   //it may need to be changed but even on ?date= it will be equal to null, which is falsy
   else if (validDateQuery(dateQueury)) { //when date queury is valid date format, will get reservations on that day
-    let formattedDate = new Date(Date.parse(dateQueury)).toISOString().slice(0, 10) //i probably dont have to, but i wanted to sanitize the input so the date format is consitent with the DB version
+    // toLocaleString returns "1/31/2023, 11:04:05 AM" format. So I can just split and return index0 for date
+    let formattedDate = new Date(Date.parse(dateQueury)).toLocaleString('en-US', {timeZone: 'CST',}).split(',')[0] 
     const data = await reservationService.listOnDate(formattedDate)
     res.json({ data })
-    //so for now ONLY in the tests, data is an empty array
   }
   else {
     // so when date query is either not specified or incorrect format show reservations for today
-    let today = new Date().toISOString().slice(0, 10)
-    // SOOO today does have the problem of I do not know what time zone it uses, and that can cause it to be a different day than it really is
+    let today = new Date().toLocaleString('en-US', {timeZone: 'CST',}).split(',')[0] 
     const data = await reservationService.listOnDate(today)
     res.json({ data })
   }
