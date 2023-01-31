@@ -10,7 +10,7 @@ function create(newReservation) {
     return knex("reservations")
         .insert(newReservation)
         .returning("*")
-        .first()
+        .then((createdRecords) => createdRecords[0]);
 }
 
 module.exports = {
