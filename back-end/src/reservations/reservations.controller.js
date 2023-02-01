@@ -66,25 +66,12 @@ const hasRequiredProperties = hasProperties(
   "people"
 );
 
-// Check if the date reservation is a date
-function reservation_dateIsDate(req, res, next) {
-  const date = req.body.data.reservation_date;
-  let parsedDate = Date.parse(date); //if date is not valid, it become NaN, and this is pretty versataile on formatting any date format
-  // OKAY so I can not do parsedDate === NaN BUT NaN is not equal to itself...so i can do this
-  if (parsedDate !== parsedDate) {
-    return next({
-      status: 400,
-      message: `reservation_date is not formatted correctly`,
-    });
-  }
-  next();
-}
 
 // Function time formatted correctly
 function reservation_timeIsTime(req, res, next) {
   let time = req.body.data.reservation_time;
   let timeFormat =
-    /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\.[0-9]{3})?)?\s?(AM|am|PM|pm)?$/; //regex for a format of a time value
+  /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\.[0-9]{3})?)?\s?(AM|am|PM|pm)?$/; //regex for a format of a time value
   // probably went over kill on the reg ex. post SQL can accept a PM/AM or pm/am at end and convert. but not a p.m or P.M
   if (timeFormat.test(time)) {
     //if time passes regex test, it is a valid time value
@@ -126,31 +113,85 @@ function getTodayAsFormattedDate() {
 // Need to check if date in query, is in past (no good), or is on a tuesday as restaurant is closed that day
 function validDateQuery(req, res, next) {
   let date = req.query.date;
-  let parsedDate = new Date(Date.parse(date)); //if date is not valid, it become NaN (or invalid date), and this is pretty versataile on formatting any date format
-
+  let parsedDate = Date.parse(date); //if date is not valid, it become NaN, and this is pretty versataile on formatting any date format
   // I need to check if there is NOT a date query too, and if not default it to today
   if (!date) {
     res.locals.date = getTodayAsFormattedDate();
     return next();
-  } else if (parsedDate !== parsedDate) {
+  } else if (!isNaN(parsedDate)) {
     //so I can not do parsedDate === NaN BUT NaN is not equal to itself...so i can do this
     // this ends up checking if parsed date is recognized by Date.parse as a date
-    parsedDate = parsedDate.toISOString().slice(0, 10); //this is just to format it so it is consistent with everything else
+    parsedDate = new Date(parsedDate).toISOString().slice(0, 10); //this is just to format it so it is consistent with everything else
     res.locals.date = parsedDate;
     return next();
   } else {
     // If I get here, it means the date query was not recognized as a date. I am just gonna console and error, and use today as a date value
     console.error(
       `Error on checking date query, reverting to default of today`
-    );
-    res.locals.date = getTodayAsFormattedDate();
-    return next();
+      );
+      res.locals.date = getTodayAsFormattedDate();
+      return next();
+    }
+  }
+  
+  // Check if the date reservation is a date
+  // OKAY I AM GIVING UP ON DATE BEING VERSATAILLE, IT MUST BE YYYY/MM/DD or YY-MM-DD
+  function reservation_dateIsDate(req, res, next) {
+    const date = req.body.data.reservation_date;
+    let dateFormat = /^(\d{4})(\/|-)(\d{2})\2(\d{2})$/
+    // I had to too many errors with different date formats. date MUST BE YYYY-MM-DD
+    if (!dateFormat.test(date)) {
+      return next({
+        status: 400,
+        message: `reservation_date is not formatted correctly`,
+      });
+    }
+    let dateClass = new Date(date)
+    // if isNaN true, date not formatted right\
+    // this will validate the date, like 2023/02/53
+    // ...doesnt check for stuff like 2023/02/30 tho, which is a shame
+    if (isNaN(Date.parse(date))) {
+      return next({
+        status: 400,
+        message: `reservation_date is not a correct date`,
+      });
+    }
+    next();
   }
 
-  // // as a fun bonus thing. A inncorrect date will return 'Invalid Date' which will always be falsy here
-  // if (today.setHours(0, 0, 0, 0) <= parsedDate.setHours(0, 0, 0, 0)) {
-  //   // format the date just so it is concistent
-  // }
+  function addADayCauseJSKeepsConvertingToMyTimeZoneAndLosingADay(date) {
+    let result = new Date(date);
+    result.setDate(result.getDate() + 1);
+    return result;
+  }
+
+  // validate a date is in future and not on a tuesday...this one got messy
+  function validDateOnCreate (req, res, next) {
+    // So a date to ISOstring, is at UTC, i however can not use getDays or other date functions on it. And any date object is converted to my timezone (and since the dates dont have a time specified, they default to midnight, and so when they get converted, they roll back a day)
+    let dateErrors = []
+    let date = req.body.data.reservation_date;
+    let today = new Date ()
+ 
+    let datePlusOne = addADayCauseJSKeepsConvertingToMyTimeZoneAndLosingADay(date)
+
+    let day = datePlusOne.getDay()
+    if (today.setHours(0, 0, 0, 0) > datePlusOne.setHours(0, 0, 0, 0)) {
+      // this compare the unix time, so miliseconds from 1974 or something. If they are on the same day, they will be equal so cant be >= but must be >
+      
+      dateErrors.push('Requested date must be in the future')
+    }
+    // when day is 2, its tuesday, restaurant closed that day
+  if (day === 2) {
+    dateErrors.push('Requested reservation on day restaurant is closed')
+  }
+
+  if (dateErrors.length !== 0) {
+    next({
+      status: 400,
+      message: `${dateErrors.join(", ")}`
+    })
+  }
+  return next()
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~ END POINTS ~~~~~~~~~~~~~~~~~~~~~
@@ -186,6 +227,7 @@ module.exports = {
     reservation_dateIsDate,
     reservation_timeIsTime,
     peopleIsValidNumber,
+    validDateOnCreate,
     asyncErrorBoundary(create),
   ],
 };
