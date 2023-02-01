@@ -1,5 +1,6 @@
 const reservationService = require("./reservations.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary"); //only need to use asyncErrorBound on async functions
+const { min } = require("../db/connection");
 
 // ~~~~~~~~~~~~~~~~~~~~~ MIDDLE WARE ~~~~~~~~~~~~~~~~~~~~~
 
@@ -71,15 +72,15 @@ const hasRequiredProperties = hasProperties(
 function reservation_timeIsTime(req, res, next) {
   let time = req.body.data.reservation_time;
   let timeFormat =
-  /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9](\.[0-9]{3})?)?\s?(AM|am|PM|pm)?$/; //regex for a format of a time value
-  // probably went over kill on the reg ex. post SQL can accept a PM/AM or pm/am at end and convert. but not a p.m or P.M
+  /^([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/; //regex for a format of a time value (allows for seconds to be there too)
   if (timeFormat.test(time)) {
     //if time passes regex test, it is a valid time value
+    res.locals.time = time
     return next();
   }
   return next({
     status: 400,
-    message: `reservation_time is not formatted correctly`,
+    message: `reservation_time is not formatted correctly in HH:MM format`,
   });
 }
 
@@ -106,7 +107,7 @@ function peopleIsValidNumber(req, res, next) {
 // Get today's date, formatted as only the date, and in central time zone
 function getTodayAsFormattedDate() {
   let today = new Date();
-  today = today.toLocaleString("en-US", { timeZone: "CST" }).split(",")[0];
+  today = today.toLocaleString().split(",")[0]; //when toLocaleString is called with out vari, it defaults to system time (it also has time and split [0] get rids of that)
   return today;
 }
 
@@ -126,9 +127,11 @@ function validDateQuery(req, res, next) {
     return next();
   } else {
     // If I get here, it means the date query was not recognized as a date. I am just gonna console and error, and use today as a date value
-    console.error(
-      `Error on checking date query, reverting to default of today`
-      );
+    if (date !== 'all') {
+      console.error(
+        `Error on checking date query, reverting to default of today`
+        );
+    }
       res.locals.date = getTodayAsFormattedDate();
       return next();
     }
@@ -143,7 +146,7 @@ function validDateQuery(req, res, next) {
     if (!dateFormat.test(date)) {
       return next({
         status: 400,
-        message: `reservation_date is not formatted correctly`,
+        message: `reservation_date is not formatted correctly of YYYY/MM/DD`,
       });
     }
     // if isNaN true, date not formatted right\
@@ -158,13 +161,6 @@ function validDateQuery(req, res, next) {
     next();
   }
 
-  // SO, JS keeps converting inputted date to my time zone, so it rolls back one day due to that, I finally just gave up, and I just add a day now
-  function addADayCauseJSKeepsConvertingToMyTimeZoneAndLosingADay(date) {
-    let result = new Date(date);
-    result.setDate(result.getDate() + 1);
-    return result;
-  }
-
   // validate a date is in future and not on a tuesday...this one got messy
   function validDateOnCreate (req, res, next) {
     // So the date class, tries converting to my timezone, and as it defaults to midnight UTC, it rolls back one day.
@@ -172,11 +168,14 @@ function validDateQuery(req, res, next) {
     let dateErrors = []
     let date = req.body.data.reservation_date;
     let today = new Date ()
- 
-    let datePlusOne = addADayCauseJSKeepsConvertingToMyTimeZoneAndLosingADay(date)
-    let day = datePlusOne.getDay() //get day returns an int 0 to 6. 0 sunday, 6 saturday. So tuesday fittingly will be two
 
-    if (today.setHours(0, 0, 0, 0) > datePlusOne.setHours(0, 0, 0, 0)) {
+    let time = res.locals.time //ex :01:30 (it will always be two digits)
+    
+    let formattedDate = new Date(`${date}T${time}`) //Given 2023-02-25 T 23:59  (remember may need .toLocaleString())
+    // console.log(formattedDate.toLocaleString()) //2023-02-25T06:01:00.000Z
+    let day = formattedDate.getDay() //get day returns an int 0 to 6. 0 sunday, 6 saturday. So tuesday fittingly will be two
+
+    if (Date.parse(formattedDate) <= Date.parse(today)) {
       // this compare the unix time, so miliseconds from 1974 or something. If they are on the same day, they will be equal so cant be >= but must be >
       dateErrors.push('Requested date must be in the future')
     }
