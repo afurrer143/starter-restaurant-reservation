@@ -80,7 +80,7 @@ function reservation_timeIsTime(req, res, next) {
   }
   return next({
     status: 400,
-    message: `reservation_time is not formatted correctly in HH:MM format`,
+    message: `reservation_time is not formatted correctly in the 24 hour HH:MM format`,
   });
 }
 
@@ -193,6 +193,63 @@ function validDateQuery(req, res, next) {
   return next()
 }
 
+// Although not incredibly pratical for the capstone, allows more versatailty if used in prod
+function convertTime12to24 (time12h) {
+
+  let [time, modifier] = time12h.split(' ');
+  let [hours, minutes] = time.split(':');
+  if (hours === '12') {
+    hours = '00';
+  }
+
+  modifier = modifier.replace(/\./g, ""); //clears any "." in modifier, such as P.M or a.m
+  if (modifier.toLowerCase() === 'pm') {
+    hours = parseInt(hours, 10) + 12;
+  }
+
+  return `${hours}:${minutes}`;
+}
+
+// A function to turn a time such as "13:30" to only be a number of its minute values, to allow easy math comparisions
+function convertTimeToMinutes (time24h) {
+  let [hours, minutes] = time24h.split(':')
+  hours = Number(hours) * 60
+  let totalTime = hours + Number(minutes)
+  return totalTime
+}
+
+function validateTimeOnCreate (req, res, next) {
+  let openTime = "10:30 AM" //allow plain string to be open and close time with AM PM in it (Note though for this time must have a space between the time and modifier
+  let closeTime = "10:30 PM" 
+  let MinutesAllowedBeforeClose = 60 
+
+  let time = res.locals.time //time was validated so it is in HH:MM (and optional :SS)
+  if (time.length >= 5) { //just to be sure it doesnt mess stuff up clean up time so it is just HH:MM if seconds are there
+    time = time.slice(0,5)
+  }
+  
+  let openValue = convertTimeToMinutes(convertTime12to24(openTime)) //converts time to a number for math comparissions
+  let closeValue = convertTimeToMinutes(convertTime12to24(closeTime))
+  let reservationValue = convertTimeToMinutes(time) //already validated time doesnt have AM or PM
+
+  // if reservation value is less than open value, its before opening
+  if (reservationValue < openValue) {
+    next ({
+      status: 400,
+      message: `reservation_time is before opening of ${openTime}`
+    })
+  }
+
+  if (reservationValue > closeValue - MinutesAllowedBeforeClose) { //I allow MinutesAllowedBeforeClose so code more versatile and allows more options
+    next ({
+      status: 400,
+      message: `reservation_time must be at least ${MinutesAllowedBeforeClose} minutes before we close at ${closeTime}`
+    })
+  }
+
+  next()
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~ END POINTS ~~~~~~~~~~~~~~~~~~~~~
 
 // list returns entirety of reservation table
@@ -227,6 +284,7 @@ module.exports = {
     reservation_timeIsTime,
     peopleIsValidNumber,
     validDateOnCreate,
+    validateTimeOnCreate,
     asyncErrorBoundary(create),
   ],
 };
