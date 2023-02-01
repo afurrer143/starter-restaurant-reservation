@@ -146,7 +146,6 @@ function validDateQuery(req, res, next) {
         message: `reservation_date is not formatted correctly`,
       });
     }
-    let dateClass = new Date(date)
     // if isNaN true, date not formatted right\
     // this will validate the date, like 2023/02/53
     // ...doesnt check for stuff like 2023/02/30 tho, which is a shame
@@ -159,6 +158,7 @@ function validDateQuery(req, res, next) {
     next();
   }
 
+  // SO, JS keeps converting inputted date to my time zone, so it rolls back one day due to that, I finally just gave up, and I just add a day now
   function addADayCauseJSKeepsConvertingToMyTimeZoneAndLosingADay(date) {
     let result = new Date(date);
     result.setDate(result.getDate() + 1);
@@ -167,17 +167,17 @@ function validDateQuery(req, res, next) {
 
   // validate a date is in future and not on a tuesday...this one got messy
   function validDateOnCreate (req, res, next) {
-    // So a date to ISOstring, is at UTC, i however can not use getDays or other date functions on it. And any date object is converted to my timezone (and since the dates dont have a time specified, they default to midnight, and so when they get converted, they roll back a day)
+    // So the date class, tries converting to my timezone, and as it defaults to midnight UTC, it rolls back one day.
+    // Just add a day with setDate cause nothing else could work
     let dateErrors = []
     let date = req.body.data.reservation_date;
     let today = new Date ()
  
     let datePlusOne = addADayCauseJSKeepsConvertingToMyTimeZoneAndLosingADay(date)
+    let day = datePlusOne.getDay() //get day returns an int 0 to 6. 0 sunday, 6 saturday. So tuesday fittingly will be two
 
-    let day = datePlusOne.getDay()
     if (today.setHours(0, 0, 0, 0) > datePlusOne.setHours(0, 0, 0, 0)) {
       // this compare the unix time, so miliseconds from 1974 or something. If they are on the same day, they will be equal so cant be >= but must be >
-      
       dateErrors.push('Requested date must be in the future')
     }
     // when day is 2, its tuesday, restaurant closed that day
