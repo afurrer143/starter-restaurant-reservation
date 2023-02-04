@@ -1,6 +1,6 @@
 const reservationService = require("./reservations.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary"); //only need to use asyncErrorBound on async functions
-const { min } = require("../db/connection");
+const tablesController = require("../tables/tables.controller")
 
 // ~~~~~~~~~~~~~~~~~~~~~ MIDDLE WARE ~~~~~~~~~~~~~~~~~~~~~
 
@@ -250,6 +250,60 @@ function validateTimeOnCreate (req, res, next) {
   next()
 }
 
+// check if the reservation exist by doing a .read, and if it is there, it returns something to reservatipon
+async function reservationExist (req, res, next) {
+  const reservation = await reservationService.read(req.params.reservation_id)
+  if (reservation) {
+    res.locals.reservation = reservation
+    return next()
+  }
+  next({
+    status: 404,
+    message: `reservation with id of ${req.params.reservation_id} not found`
+  })
+}
+
+function validateReservationStatusOnCreate (req, res, next) {
+  let reservationStatus = req.body.data.status;
+  if (!reservationStatus) {  
+    return next()
+  }
+  if (reservationStatus.toLowerCase() === "booked") {
+    return next()
+  }
+  return next({
+    status: 400,
+    message: `reservation status can only be null or booked. Received status of ${reservationStatus}`
+  })
+}
+
+// can only allow options for booked, seated, and finished
+function validateReservationStatusOnUpdate(req, res, next) {
+  allowedStatus = ["booked", "seated", "finished"]
+  let updatedStatus = req.body.data.status
+
+  if (allowedStatus.includes(updatedStatus)) {
+    return next()
+  }
+  next({
+    status: 400,
+    message: `Only valid status options are [ ${allowedStatus.join(", ")} ]. Received '${updatedStatus}'`
+  })
+}
+
+// if the status is finished, it can not be updated, and is essentially archived
+function checkIfStatusIsFinished (req, res, next) {
+  // Get the current status of the reservation from reservation exists (the .read of :reservation_id)
+  let status = res.locals.reservation.status
+  if (status === 'finished') {
+    return next({
+      status: 400,
+      message: `status of selected reservation of id: '${req.params.reservation_id}' is 'finished' and can not be updated`
+    })
+  }
+  next()
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~ END POINTS ~~~~~~~~~~~~~~~~~~~~~
 
 // list returns entirety of reservation table
@@ -275,6 +329,27 @@ async function create(req, res) {
   res.status(201).json({ data });
 }
 
+// Read a single reservation based on reservation id column
+async function read(req, res) {
+  const data = res.locals.reservation
+  res.json({ data })
+}
+
+// set the status. Options are "booked, seated, and finished". Since only dealing with status, do not need to validate anything else. Any extra info in req.body wont be used.
+// So i need to ALSO update the status of a table at the same time of this, and vice versa when I update a table status(aka seat or deseat one), i need to update reservation status
+// so from here I need to get tableId and tableStatus (and reservation_id which I should just have)
+// and then on tables seat table, i need to give it reservationStatus some how
+
+// so this happens on clicking "seat" next to a table on the dashboard, so I can get tableId from that
+async function setStatus (req, res) {
+  let reservationInfo = {
+    reservationId: req.params.reservation_id,
+    reservationStatus: req.body.data.status
+  };
+  const data = await reservationService.setStatus(reservationInfo);
+  res.json({ data });
+}
+
 module.exports = {
   list: [validDateQuery, asyncErrorBoundary(list)],
   create: [
@@ -283,8 +358,14 @@ module.exports = {
     reservation_dateIsDate,
     reservation_timeIsTime,
     peopleIsValidNumber,
+    validateReservationStatusOnCreate,
     validDateOnCreate,
     validateTimeOnCreate,
     asyncErrorBoundary(create),
   ],
+  read: [
+    asyncErrorBoundary(reservationExist),
+    read
+  ],
+  setStatus: [validateReservationStatusOnUpdate, asyncErrorBoundary(reservationExist), checkIfStatusIsFinished, asyncErrorBoundary(setStatus)]
 };
