@@ -6,10 +6,12 @@ function list() {
 }
 
 // get reservation that match the date
+// need to add where this does not get reservation with status of "finished"
 function listOnDate(date) {
   return knex("reservations")
     .select("*")
     .where("reservation_date", date)
+    .whereNot("status", "finished")
     .orderBy([{ column: "reservation_date" }, { column: "reservation_time" }]);
 }
 
