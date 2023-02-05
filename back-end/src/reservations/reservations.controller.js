@@ -304,6 +304,18 @@ function checkIfStatusIsFinished (req, res, next) {
   next()
 }
 
+function checkIfStatusIsSeated (req, res, next) {
+  // Get the current status of the reservation from reservation exists (the .read of :reservation_id)
+  let status = res.locals.reservation.status
+  if (status === 'seated') {
+    return next({
+      status: 400,
+      message: `status of selected reservation of id: '${req.params.reservation_id}' is 'finished' and can not be updated`
+    })
+  }
+  next()
+}
+
 // ~~~~~~~~~~~~~~~~~~~~~ END POINTS ~~~~~~~~~~~~~~~~~~~~~
 
 // list returns entirety of reservation table
@@ -336,11 +348,7 @@ async function read(req, res) {
 }
 
 // set the status. Options are "booked, seated, and finished". Since only dealing with status, do not need to validate anything else. Any extra info in req.body wont be used.
-// So i need to ALSO update the status of a table at the same time of this, and vice versa when I update a table status(aka seat or deseat one), i need to update reservation status
-// so from here I need to get tableId and tableStatus (and reservation_id which I should just have)
-// and then on tables seat table, i need to give it reservationStatus some how
-
-// so this happens on clicking "seat" next to a table on the dashboard, so I can get tableId from that
+// So i was thinking I had to setStatus, then "seat table" AND vice versa. but really I just need to seat table, AND THEN setStatus. And no vice versa
 async function setStatus (req, res) {
   let reservationInfo = {
     reservationId: req.params.reservation_id,
