@@ -1,11 +1,12 @@
 const reservationService = require("./reservations.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary"); //only need to use asyncErrorBound on async functions
-const tablesController = require("../tables/tables.controller")
+const tablesController = require("../tables/tables.controller");
 
 // ~~~~~~~~~~~~~~~~~~~~~ MIDDLE WARE ~~~~~~~~~~~~~~~~~~~~~
 
 // array of only the possible valid properties in reservation table
 const VALID_RESERVATION_PROPERTIES = [
+  "reservation_id",
   "first_name",
   "last_name",
   "mobile_number",
@@ -67,15 +68,13 @@ const hasRequiredProperties = hasProperties(
   "people"
 );
 
-
 // Function time formatted correctly
 function reservation_timeIsTime(req, res, next) {
   let time = req.body.data.reservation_time;
-  let timeFormat =
-  /^([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/; //regex for a format of a time value (allows for seconds to be there too)
+  let timeFormat = /^([01][0-9]|2[0-3]):[0-5][0-9](:[0-5][0-9])?$/; //regex for a format of a time value (allows for seconds to be there too)
   if (timeFormat.test(time)) {
     //if time passes regex test, it is a valid time value
-    res.locals.time = time
+    res.locals.time = time;
     return next();
   }
   return next({
@@ -126,83 +125,82 @@ function validDateQuery(req, res, next) {
     return next();
   } else {
     // If I get here, it means the date query was not recognized as a date. I am just gonna console and error, and use today as a date value
-    if (date !== 'all') {
+    if (date !== "all") {
       console.error(
         `Error on checking date query, reverting to default of today`
-        );
+      );
     }
-      res.locals.date = getTodayAsFormattedDate();
-      return next();
-    }
+    res.locals.date = getTodayAsFormattedDate();
+    return next();
   }
-  
-  // Check if the date reservation is a date
-  // OKAY I AM GIVING UP ON DATE BEING VERSATAILLE, IT MUST BE YYYY/MM/DD or YY-MM-DD
-  function reservation_dateIsDate(req, res, next) {
-    const date = req.body.data.reservation_date;
-    let dateFormat = /^(\d{4})(\/|-)(\d{2})\2(\d{2})$/
-    // I had to too many errors with different date formats. date MUST BE YYYY-MM-DD
-    if (!dateFormat.test(date)) {
-      return next({
-        status: 400,
-        message: `reservation_date is not formatted correctly of YYYY/MM/DD`,
-      });
-    }
-    // if isNaN true, date not formatted right\
-    // this will validate the date, like 2023/02/53
-    // ...doesnt check for stuff like 2023/02/30 tho, which is a shame
-    if (isNaN(Date.parse(date))) {
-      return next({
-        status: 400,
-        message: `reservation_date is not a correct date`,
-      });
-    }
-    next();
+}
+
+// Check if the date reservation is a date
+// OKAY I AM GIVING UP ON DATE BEING VERSATAILLE, IT MUST BE YYYY/MM/DD or YY-MM-DD
+function reservation_dateIsDate(req, res, next) {
+  const date = req.body.data.reservation_date;
+  let dateFormat = /^(\d{4})(\/|-)(\d{2})\2(\d{2})$/;
+  // I had to too many errors with different date formats. date MUST BE YYYY-MM-DD
+  if (!dateFormat.test(date)) {
+    return next({
+      status: 400,
+      message: `reservation_date is not formatted correctly of YYYY/MM/DD`,
+    });
   }
+  // if isNaN true, date not formatted right\
+  // this will validate the date, like 2023/02/53
+  // ...doesnt check for stuff like 2023/02/30 tho, which is a shame
+  if (isNaN(Date.parse(date))) {
+    return next({
+      status: 400,
+      message: `reservation_date is not a correct date`,
+    });
+  }
+  next();
+}
 
-  // validate a date is in future and not on a tuesday...this one got messy
-  function validDateOnCreate (req, res, next) {
-    // So the date class, tries converting to my timezone, and as it defaults to midnight UTC, it rolls back one day.
-    // Just add a day with setDate cause nothing else could work
-    let dateErrors = []
-    let date = req.body.data.reservation_date;
-    let today = new Date ()
+// validate a date is in future and not on a tuesday...this one got messy
+function validDateOnCreate(req, res, next) {
+  // So the date class, tries converting to my timezone, and as it defaults to midnight UTC, it rolls back one day.
+  // Just add a day with setDate cause nothing else could work
+  let dateErrors = [];
+  let date = req.body.data.reservation_date;
+  let today = new Date();
 
-    let time = res.locals.time //ex :01:30 (it will always be two digits)
-    
-    let formattedDate = new Date(`${date}T${time}`) //Given 2023-02-25 T 23:59  (remember may need .toLocaleString())
-    // console.log(formattedDate.toLocaleString()) //2023-02-25T06:01:00.000Z
-    let day = formattedDate.getDay() //get day returns an int 0 to 6. 0 sunday, 6 saturday. So tuesday fittingly will be two
+  let time = res.locals.time; //ex :01:30 (it will always be two digits)
 
-    if (Date.parse(formattedDate) <= Date.parse(today)) {
-      // this compare the unix time, so miliseconds from 1974 or something. If they are on the same day, they will be equal so cant be >= but must be >
-      dateErrors.push('Requested date must be in the future')
-    }
-    // when day is 2, its tuesday, restaurant closed that day
+  let formattedDate = new Date(`${date}T${time}`); //Given 2023-02-25 T 23:59  (remember may need .toLocaleString())
+  // console.log(formattedDate.toLocaleString()) //2023-02-25T06:01:00.000Z
+  let day = formattedDate.getDay(); //get day returns an int 0 to 6. 0 sunday, 6 saturday. So tuesday fittingly will be two
+
+  if (Date.parse(formattedDate) <= Date.parse(today)) {
+    // this compare the unix time, so miliseconds from 1974 or something. If they are on the same day, they will be equal so cant be >= but must be >
+    dateErrors.push("Requested date must be in the future");
+  }
+  // when day is 2, its tuesday, restaurant closed that day
   if (day === 2) {
-    dateErrors.push('Requested reservation on day restaurant is closed')
+    dateErrors.push("Requested reservation on day restaurant is closed");
   }
 
   if (dateErrors.length !== 0) {
     next({
       status: 400,
-      message: `${dateErrors.join(", ")}`
-    })
+      message: `${dateErrors.join(", ")}`,
+    });
   }
-  return next()
+  return next();
 }
 
 // Although not incredibly pratical for the capstone, allows more versatailty if used in prod
-function convertTime12to24 (time12h) {
-
-  let [time, modifier] = time12h.split(' ');
-  let [hours, minutes] = time.split(':');
-  if (hours === '12') {
-    hours = '00';
+function convertTime12to24(time12h) {
+  let [time, modifier] = time12h.split(" ");
+  let [hours, minutes] = time.split(":");
+  if (hours === "12") {
+    hours = "00";
   }
 
   modifier = modifier.replace(/\./g, ""); //clears any "." in modifier, such as P.M or a.m
-  if (modifier.toLowerCase() === 'pm') {
+  if (modifier.toLowerCase() === "pm") {
     hours = parseInt(hours, 10) + 12;
   }
 
@@ -210,109 +208,114 @@ function convertTime12to24 (time12h) {
 }
 
 // A function to turn a time such as "13:30" to only be a number of its minute values, to allow easy math comparisions
-function convertTimeToMinutes (time24h) {
-  let [hours, minutes] = time24h.split(':')
-  hours = Number(hours) * 60
-  let totalTime = hours + Number(minutes)
-  return totalTime
+function convertTimeToMinutes(time24h) {
+  let [hours, minutes] = time24h.split(":");
+  hours = Number(hours) * 60;
+  let totalTime = hours + Number(minutes);
+  return totalTime;
 }
 
-function validateTimeOnCreate (req, res, next) {
-  let openTime = "10:30 AM" //allow plain string to be open and close time with AM PM in it (Note though for this time must have a space between the time and modifier
-  let closeTime = "10:30 PM" 
-  let MinutesAllowedBeforeClose = 60 
+function validateTimeOnCreate(req, res, next) {
+  let openTime = "10:30 AM"; //allow plain string to be open and close time with AM PM in it (Note though for this time must have a space between the time and modifier
+  let closeTime = "10:30 PM";
+  let MinutesAllowedBeforeClose = 60;
 
-  let time = res.locals.time //time was validated so it is in HH:MM (and optional :SS)
-  if (time.length >= 5) { //just to be sure it doesnt mess stuff up clean up time so it is just HH:MM if seconds are there
-    time = time.slice(0,5)
+  let time = res.locals.time; //time was validated so it is in HH:MM (and optional :SS)
+  if (time.length >= 5) {
+    //just to be sure it doesnt mess stuff up clean up time so it is just HH:MM if seconds are there
+    time = time.slice(0, 5);
   }
-  
-  let openValue = convertTimeToMinutes(convertTime12to24(openTime)) //converts time to a number for math comparissions
-  let closeValue = convertTimeToMinutes(convertTime12to24(closeTime))
-  let reservationValue = convertTimeToMinutes(time) //already validated time doesnt have AM or PM
+
+  let openValue = convertTimeToMinutes(convertTime12to24(openTime)); //converts time to a number for math comparissions
+  let closeValue = convertTimeToMinutes(convertTime12to24(closeTime));
+  let reservationValue = convertTimeToMinutes(time); //already validated time doesnt have AM or PM
 
   // if reservation value is less than open value, its before opening
   if (reservationValue < openValue) {
-    next ({
+    next({
       status: 400,
-      message: `reservation_time is before opening of ${openTime}`
-    })
+      message: `reservation_time is before opening of ${openTime}`,
+    });
   }
 
-  if (reservationValue > closeValue - MinutesAllowedBeforeClose) { //I allow MinutesAllowedBeforeClose so code more versatile and allows more options
-    next ({
+  if (reservationValue > closeValue - MinutesAllowedBeforeClose) {
+    //I allow MinutesAllowedBeforeClose so code more versatile and allows more options
+    next({
       status: 400,
-      message: `reservation_time must be at least ${MinutesAllowedBeforeClose} minutes before we close at ${closeTime}`
-    })
+      message: `reservation_time must be at least ${MinutesAllowedBeforeClose} minutes before we close at ${closeTime}`,
+    });
   }
 
-  next()
+  next();
 }
 
 // check if the reservation exist by doing a .read, and if it is there, it returns something to reservatipon
-async function reservationExist (req, res, next) {
-  const reservation = await reservationService.read(req.params.reservation_id)
+async function reservationExist(req, res, next) {
+  const reservation = await reservationService.read(req.params.reservation_id);
   if (reservation) {
-    res.locals.reservation = reservation
-    return next()
+    res.locals.reservation = reservation;
+    return next();
   }
   next({
     status: 404,
-    message: `reservation with id of ${req.params.reservation_id} not found`
-  })
+    message: `reservation with id of ${req.params.reservation_id} not found`,
+  });
 }
 
-function validateReservationStatusOnCreate (req, res, next) {
+function validateReservationStatusOnCreate(req, res, next) {
   let reservationStatus = req.body.data.status;
-  if (!reservationStatus) {  
-    return next()
+  if (!reservationStatus) {
+    return next();
   }
   if (reservationStatus.toLowerCase() === "booked") {
-    return next()
+    return next();
   }
   return next({
     status: 400,
-    message: `reservation status can only be null or booked. Received status of ${reservationStatus}`
-  })
+    message: `reservation status can only be null or booked. Received status of ${reservationStatus}`,
+  });
 }
 
 // can only allow options for booked, seated, and finished (Also now cancelled)
 function validateReservationStatusOnUpdate(req, res, next) {
-  allowedStatus = ["booked", "seated", "finished, cancelled"]
-  let updatedStatus = req.body.data.status
+  allowedStatus = ["booked", "seated", "finished, cancelled"];
+  let updatedStatus = req.body.data.status;
 
   if (allowedStatus.includes(updatedStatus)) {
-    return next()
+    return next();
   }
   next({
     status: 400,
-    message: `Only valid status options are [ ${allowedStatus.join(", ")} ]. Received '${updatedStatus}'`
-  })
+    message: `Only valid status options are [ ${allowedStatus.join(
+      ", "
+    )} ]. Received '${updatedStatus}'`,
+  });
 }
 
 // if the status is finished, it can not be updated, and is essentially archived
-function checkIfStatusIsFinished (req, res, next) {
+function checkIfStatusIsFinished(req, res, next) {
   // Get the current status of the reservation from reservation exists (the .read of :reservation_id)
-  let status = res.locals.reservation.status
-  if (status === 'finished') {
+  let status = res.locals.reservation.status;
+  if (status === "finished") {
     return next({
       status: 400,
-      message: `status of selected reservation of id: '${req.params.reservation_id}' is 'finished' and can not be updated`
-    })
+      message: `status of selected reservation of id: '${req.params.reservation_id}' is 'finished' and can not be updated`,
+    });
   }
-  next()
+  next();
 }
 
-function checkIfStatusIsSeated (req, res, next) {
+// Only a status of booked can be updated
+function checkIfStatusIsBooked(req, res, next) {
   // Get the current status of the reservation from reservation exists (the .read of :reservation_id)
-  let status = res.locals.reservation.status
-  if (status === 'seated') {
-    return next({
-      status: 400,
-      message: `status of selected reservation of id: '${req.params.reservation_id}' is 'finished' and can not be updated`
-    })
+  let status = res.locals.reservation.status;
+  if (status === "booked") {
+    return next();
   }
-  next()
+  next({
+    status: 400,
+    message: `status of selected reservation of id: '${req.params.reservation_id}' is '${status}' and only a reservation with status of 'booked' can be updated`,
+  });
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~ END POINTS ~~~~~~~~~~~~~~~~~~~~~
@@ -321,10 +324,10 @@ function checkIfStatusIsSeated (req, res, next) {
 // with helper functions above to get reservations on a day
 async function list(req, res) {
   const dateQueury = res.locals.date;
-  const numberQueury = req.query.mobile_number
+  const numberQueury = req.query.mobile_number;
 
   // i wanna also be able to see all reservation if i do ?date=all
-  if (req.query.date === "all" ||  req.query.mobile_number === "all") {
+  if (req.query.date === "all" || req.query.mobile_number === "all") {
     //if i wanna see all reservations, can add ?date=all
     const data = await reservationService.list();
     res.json({ data });
@@ -347,26 +350,28 @@ async function create(req, res) {
 
 // Read a single reservation based on reservation id column
 async function read(req, res) {
-  const data = res.locals.reservation
-  res.json({ data })
+  const data = res.locals.reservation;
+  res.json({ data });
 }
 
 // set the status. Options are "booked, seated, and finished ALSO CANCELLED". Since only dealing with status, do not need to validate anything else. Any extra info in req.body wont be used.
 // So i was thinking I had to setStatus, then "seat table" AND vice versa. but really I just need to seat table, AND THEN setStatus. And no vice versa
-async function setStatus (req, res) {
+async function setStatus(req, res) {
   let reservationInfo = {
     reservationId: req.params.reservation_id,
-    reservationStatus: req.body.data.status
+    reservationStatus: req.body.data.status,
   };
   const data = await reservationService.setStatus(reservationInfo);
   res.json({ data });
 }
 
-async function update (req, res) {
-  let reservationInfo = {
-    // need to get the reservation object of what I allow to be updated (which should be everything but timestamps)
-    toDoLater: "problem for later"
+async function update(req, res) {
+  const updatedReservation = {
+    ...req.body.data,
+    reservation_id: req.params.reservation_id,
   };
+  const data = await reservationService.update(updatedReservation);
+  res.json({ data });
 }
 
 module.exports = {
@@ -382,10 +387,12 @@ module.exports = {
     validateTimeOnCreate,
     asyncErrorBoundary(create),
   ],
-  read: [
+  read: [asyncErrorBoundary(reservationExist), read],
+  setStatus: [
+    validateReservationStatusOnUpdate,
     asyncErrorBoundary(reservationExist),
-    read
+    checkIfStatusIsFinished,
+    asyncErrorBoundary(setStatus),
   ],
-  setStatus: [validateReservationStatusOnUpdate, asyncErrorBoundary(reservationExist), checkIfStatusIsFinished, asyncErrorBoundary(setStatus)],
-  update: [asyncErrorBoundary(update)]
+  update: [asyncErrorBoundary(reservationExist), hasOnlyValidProperties, checkIfStatusIsBooked, asyncErrorBoundary(update)],
 };

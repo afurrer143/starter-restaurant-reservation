@@ -56,6 +56,14 @@ function setStatus(reservationInfo) {
     .then((createdRecords) => createdRecords[0]);
 }
 
+// update a current reservation or cancel it
+function update(updatedReservation) {
+  return knex("reservations")
+    .select("*")
+    .where({ reservation_id: updatedReservation.reservation_id })
+    .update(updatedReservation, "*");
+}
+
 module.exports = {
   list,
   create,
@@ -63,4 +71,5 @@ module.exports = {
   searchPhoneNumber,
   read,
   setStatus,
+  update,
 };
