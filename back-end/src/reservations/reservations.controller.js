@@ -276,9 +276,9 @@ function validateReservationStatusOnCreate (req, res, next) {
   })
 }
 
-// can only allow options for booked, seated, and finished
+// can only allow options for booked, seated, and finished (Also now cancelled)
 function validateReservationStatusOnUpdate(req, res, next) {
-  allowedStatus = ["booked", "seated", "finished"]
+  allowedStatus = ["booked", "seated", "finished, cancelled"]
   let updatedStatus = req.body.data.status
 
   if (allowedStatus.includes(updatedStatus)) {
@@ -351,7 +351,7 @@ async function read(req, res) {
   res.json({ data })
 }
 
-// set the status. Options are "booked, seated, and finished". Since only dealing with status, do not need to validate anything else. Any extra info in req.body wont be used.
+// set the status. Options are "booked, seated, and finished ALSO CANCELLED". Since only dealing with status, do not need to validate anything else. Any extra info in req.body wont be used.
 // So i was thinking I had to setStatus, then "seat table" AND vice versa. but really I just need to seat table, AND THEN setStatus. And no vice versa
 async function setStatus (req, res) {
   let reservationInfo = {
@@ -360,6 +360,13 @@ async function setStatus (req, res) {
   };
   const data = await reservationService.setStatus(reservationInfo);
   res.json({ data });
+}
+
+async function update (req, res) {
+  let reservationInfo = {
+    // need to get the reservation object of what I allow to be updated (which should be everything but timestamps)
+    toDoLater: "problem for later"
+  };
 }
 
 module.exports = {
@@ -379,5 +386,6 @@ module.exports = {
     asyncErrorBoundary(reservationExist),
     read
   ],
-  setStatus: [validateReservationStatusOnUpdate, asyncErrorBoundary(reservationExist), checkIfStatusIsFinished, asyncErrorBoundary(setStatus)]
+  setStatus: [validateReservationStatusOnUpdate, asyncErrorBoundary(reservationExist), checkIfStatusIsFinished, asyncErrorBoundary(setStatus)],
+  update: [asyncErrorBoundary(update)]
 };
