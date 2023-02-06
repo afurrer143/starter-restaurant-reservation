@@ -15,6 +15,17 @@ function listOnDate(date) {
     .orderBy([{ column: "reservation_date" }, { column: "reservation_time" }]);
 }
 
+// search database for partial matches to inputted phone number (not phone number is not validated in anyway)
+// and allows for partial matches (ex 281-555 will show any phone numb in DB with those numbers in the begining)
+function searchPhoneNumber(phoneNumber) {
+  return knex("reservations")
+    .whereRaw(
+      "translate(mobile_number, '() -', '') like ?",
+      `%${phoneNumber.replace(/\D/g, "")}%`
+    )
+    .orderBy("reservation_date");
+}
+
 // create takes a new reservation (which is validated in controller, inserts it and returns the new reservation) ((Technically i believe insert canbe used to insert multiple things, .first() will as it name implies only return the first thing insert but the rest will still be put in..i think))
 function create(newReservation) {
   return knex("reservations")
@@ -31,6 +42,7 @@ function read(reservationId) {
     .first();
 }
 
+// set status of a reservation to booked, completed, or finished
 function setStatus(reservationInfo) {
   let { reservationId, reservationStatus } = reservationInfo;
   return knex("reservations")
@@ -48,6 +60,7 @@ module.exports = {
   list,
   create,
   listOnDate,
+  searchPhoneNumber,
   read,
   setStatus,
 };

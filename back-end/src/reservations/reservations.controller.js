@@ -120,7 +120,6 @@ function validDateQuery(req, res, next) {
     res.locals.date = getTodayAsFormattedDate();
     return next();
   } else if (!isNaN(parsedDate)) {
-    //so I can not do parsedDate === NaN BUT NaN is not equal to itself...so i can do this
     // this ends up checking if parsed date is recognized by Date.parse as a date
     parsedDate = new Date(parsedDate).toISOString().slice(0, 10); //this is just to format it so it is consistent with everything else
     res.locals.date = parsedDate;
@@ -322,14 +321,19 @@ function checkIfStatusIsSeated (req, res, next) {
 // with helper functions above to get reservations on a day
 async function list(req, res) {
   const dateQueury = res.locals.date;
+  const numberQueury = req.query.mobile_number
 
   // i wanna also be able to see all reservation if i do ?date=all
-  if (req.query.date === "all") {
+  if (req.query.date === "all" ||  req.query.mobile_number === "all") {
     //if i wanna see all reservations, can add ?date=all
     const data = await reservationService.list();
     res.json({ data });
+  } else if (numberQueury) {
+    // If a mobile number in request, do search based on that and i do not need to validate the phone number. Just allow it as is
+    const data = await reservationService.searchPhoneNumber(numberQueury);
+    res.json({ data });
   } else {
-    // when req query isnt all, we use listOnDate, and we get date query from validDateQuery
+    // when req query date isnt all or no req.params, we default use listOnDate, and we get date query from validDateQuery
     const data = await reservationService.listOnDate(dateQueury);
     res.json({ data });
   }
