@@ -68,6 +68,32 @@ const hasRequiredProperties = hasProperties(
   "people"
 );
 
+function validateMobileNumber(req, res, next) {
+  let phoneNumber = req.body.data.mobile_number;
+
+  let phoneFormat = /^\(?(\d{3})\)?[- ]?(\d{3})[- ]?(\d{4})$/;
+
+  if (!phoneFormat.test(phoneNumber)) {
+    return next({
+      status: 400,
+      message: `mobile_number was not formatted correctly. Try (XXX)-XXX-XXXX or XXXXXXXXXX`,
+    });
+  }
+  // if phone number passes, wanna clean the phone number, remove characters barring numbers EX (281)-555-2424 becomes 2815552424
+  phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+  // then gonna add dashes so all numbers will be nice and uniform.
+  phoneNumber =
+    phoneNumber.slice(0, 3) +
+    "-" +
+    phoneNumber.slice(3, 6) +
+    "-" +
+    phoneNumber.slice(6);
+
+    req.body.data.mobile_number = phoneNumber
+
+    next()
+}
+
 // Function time formatted correctly
 function reservation_timeIsTime(req, res, next) {
   let time = req.body.data.reservation_time;
@@ -86,7 +112,7 @@ function reservation_timeIsTime(req, res, next) {
 // Function people is a number
 function peopleIsValidNumber(req, res, next) {
   const people = req.body.data.people;
-  if (typeof people !== "number") {
+  if (isNaN(people)) {
     // if people isnt number, error out
     return next({
       status: 400,
@@ -238,7 +264,7 @@ function validateTimeOnCreate(req, res, next) {
     });
   }
 
-  if (reservationValue > closeValue - MinutesAllowedBeforeClose) {
+  if (reservationValue >= closeValue - MinutesAllowedBeforeClose) {
     //I allow MinutesAllowedBeforeClose so code more versatile and allows more options
     next({
       status: 400,
@@ -384,6 +410,7 @@ module.exports = {
     reservation_dateIsDate,
     reservation_timeIsTime,
     peopleIsValidNumber,
+    validateMobileNumber,
     validateReservationStatusOnCreate,
     validDateOnCreate,
     validateTimeOnCreate,
@@ -396,5 +423,18 @@ module.exports = {
     checkIfStatusIsFinished,
     asyncErrorBoundary(setStatus),
   ],
-  update: [asyncErrorBoundary(reservationExist), checkIfStatusIsBooked, hasOnlyValidProperties, hasRequiredProperties, reservation_dateIsDate, reservation_timeIsTime, peopleIsValidNumber, validateReservationStatusOnUpdate, validDateOnCreate, validateTimeOnCreate, asyncErrorBoundary(update)],
+  update: [
+    asyncErrorBoundary(reservationExist),
+    checkIfStatusIsBooked,
+    hasOnlyValidProperties,
+    hasRequiredProperties,
+    reservation_dateIsDate,
+    reservation_timeIsTime,
+    peopleIsValidNumber,
+    validateMobileNumber,
+    validateReservationStatusOnUpdate,
+    validDateOnCreate,
+    validateTimeOnCreate,
+    asyncErrorBoundary(update),
+  ],
 };
