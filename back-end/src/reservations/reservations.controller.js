@@ -278,7 +278,7 @@ function validateReservationStatusOnCreate(req, res, next) {
 
 // can only allow options for booked, seated, and finished (Also now cancelled)
 function validateReservationStatusOnUpdate(req, res, next) {
-  allowedStatus = ["booked", "seated", "finished, cancelled"];
+  allowedStatus = ["booked", "seated", "finished", "cancelled"];
   let updatedStatus = req.body.data.status;
 
   if (allowedStatus.includes(updatedStatus)) {
@@ -365,6 +365,8 @@ async function setStatus(req, res) {
   res.json({ data });
 }
 
+// so for update just gotta validate it has all the columns, even if they are not updated
+//which makes sense, sense I am getting the information from a react form, it will have all the information, and send all of them, even if not changed
 async function update(req, res) {
   const updatedReservation = {
     ...req.body.data,
@@ -394,5 +396,5 @@ module.exports = {
     checkIfStatusIsFinished,
     asyncErrorBoundary(setStatus),
   ],
-  update: [asyncErrorBoundary(reservationExist), hasOnlyValidProperties, checkIfStatusIsBooked, asyncErrorBoundary(update)],
+  update: [asyncErrorBoundary(reservationExist), checkIfStatusIsBooked, hasOnlyValidProperties, hasRequiredProperties, reservation_dateIsDate, reservation_timeIsTime, peopleIsValidNumber, validateReservationStatusOnUpdate, validDateOnCreate, validateTimeOnCreate, asyncErrorBoundary(update)],
 };
