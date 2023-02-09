@@ -17,7 +17,6 @@ function ReservationCard({ reservation }) {
 
   return (
     <div className="card">
-      {/* not sure how i feel about status here, may remove it */}
       <div className="card-header d-flex justify-content-between">
         <div>
           <p>

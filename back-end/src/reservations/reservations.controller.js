@@ -278,6 +278,17 @@ function validateTimeOnCreate(req, res, next) {
   next();
 }
 
+function idParamIsNumber (req, res, next) {
+  let id = req.params.reservation_id
+  if (isNaN(id) || id <= 0) {
+    return next({
+      status:400,
+      message: `id must be a positive number`
+    })
+  }
+  next()
+}
+
 // check if the reservation exist by doing a .read, and if it is there, it returns something to reservatipon
 async function reservationExist(req, res, next) {
   const reservation = await reservationService.read(req.params.reservation_id);
@@ -419,7 +430,7 @@ module.exports = {
     validateTimeOnCreate,
     asyncErrorBoundary(create),
   ],
-  read: [asyncErrorBoundary(reservationExist), read],
+  read: [idParamIsNumber, asyncErrorBoundary(reservationExist), read],
   setStatus: [
     validateReservationStatusOnUpdate,
     asyncErrorBoundary(reservationExist),

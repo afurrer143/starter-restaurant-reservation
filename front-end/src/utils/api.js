@@ -57,7 +57,7 @@ async function fetchJson(url, options, onCancel) {
  * @returns {Promise<[reservation]>}
  *  a promise that resolves to a possibly empty array of reservation saved in the database.
  */
-
+// Params being url params, such as ?date=SOMETHING
 export async function listReservations(params, signal) {
   const url = new URL(`${API_BASE_URL}/reservations`);
   Object.entries(params).forEach(([key, value]) =>
@@ -114,4 +114,17 @@ export async function createTable(newTable, signal) {
     signal,
   };
   return await fetchJson(url, options);
+}
+
+/**
+ * Retrieves a specific reservation based on ID.
+ * @returns {Promise<[reservation]>}
+ *  a promise that resolves to a object of one reservation saved in the database.
+ */
+
+export async function readReservations(id, signal) {
+  const url = new URL(`${API_BASE_URL}/reservations/${id}`);
+  return await fetchJson(url, { headers, signal }, [])
+    .then(formatReservationDate)
+    .then(formatReservationTime);
 }

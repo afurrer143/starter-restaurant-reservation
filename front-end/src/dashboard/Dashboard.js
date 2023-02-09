@@ -25,6 +25,8 @@ function Dashboard() {
 
   const history = useHistory();
 
+  
+
   useEffect(loadDashboard, [date, dateParameter]);
 
   function loadDashboard() {
@@ -67,71 +69,69 @@ function Dashboard() {
   }
 
   return (
-    <main>
-      <h1>Dashboard</h1>
-      <ErrorAlert error={reservationsError} />
-      <ErrorAlert error={tablesError} />
-      <div className="container">
-        <div className="row">
-          <div className="col-8">
-            <div>
-              <h4 className="mb-0">Reservations for {date}</h4>
+      <main>
+        <h1>Dashboard</h1>
+        <ErrorAlert error={reservationsError} />
+        <ErrorAlert error={tablesError} />
+        <div className="container">
+          <div className="row">
+            <div className="col-8">
+              <div>
+                <h4 className="mb-0">Reservations for {date}</h4>
+              </div>
+              <div>
+                {reservations.map((reservation) => (
+                  <ReservationCard
+                    key={reservation.reservation_id}
+                    reservation={reservation}
+                  />
+                ))}
+              </div>
             </div>
-            <div>
-              {reservations.map((reservation) => (
-                <ReservationCard
-                  key={reservation.reservation_id}
-                  reservation={reservation}
-                />
-              ))}
-            </div>
-          </div>
-          <div className="col-4">
-            <div>
-              <h4>Tables:</h4>
-            </div>
-            <div>
-              {tables.map((table) => (
-                <TableCard
-                  key={table.table_id}
-                  table={table}
-                />
-              ))}
+            <div className="col-4">
+              <div>
+                <h4>Tables:</h4>
+              </div>
+              <div>
+                {tables.map((table) => (
+                  <TableCard key={table.table_id} table={table} />
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="d-flex">
-        <div className="mr-auto p-1">
-          <button
-            type="button"
-            className="btn btn-primary mx-1"
-            onClick={() => PageHandler(-1)}
-          >
-            <i className="bi bi-arrow-left"></i> Back
-          </button>
+        <div className="d-flex">
+          <div className="mr-auto p-1">
+            <button
+              type="button"
+              className="btn btn-primary mx-1"
+              onClick={() => PageHandler(-1)}
+            >
+              <i className="bi bi-arrow-left"></i> Back
+            </button>
+          </div>
+          <div className="mr-auto p-1">
+            <button
+              type="button"
+              className="btn btn-primary mx-1"
+              onClick={() => PageHandler(1)}
+            >
+              <i className="bi bi-arrow-right"></i> Next
+            </button>
+          </div>
+          <div className="mr-auto p-1">
+            <button
+              type="button"
+              className="btn btn-primary mx-1"
+              onClick={() => PageHandler(0)}
+            >
+              <i className="bi bi-calendar-day-fill"></i> Today
+            </button>
+          </div>
         </div>
-        <div className="mr-auto p-1">
-          <button
-            type="button"
-            className="btn btn-primary mx-1"
-            onClick={() => PageHandler(1)}
-          >
-            <i className="bi bi-arrow-right"></i> Next
-          </button>
-        </div>
-        <div className="mr-auto p-1">
-          <button
-            type="button"
-            className="btn btn-primary mx-1"
-            onClick={() => PageHandler(0)}
-          >
-            <i className="bi bi-calendar-day-fill"></i> Today
-          </button>
-        </div>
-      </div>
-    </main>
+      </main>
+
   );
 }
 

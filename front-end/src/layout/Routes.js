@@ -6,6 +6,7 @@ import NotFound from "./NotFound";
 import NewReservation from "../reservation/newReservation"
 import NewTable from "../table/newTable"
 import SeatReservation from "../reservation/SeatReservation";
+
 import { today } from "../utils/date-time";
 
 /**
@@ -28,6 +29,7 @@ function Routes() {
       <Route exact={true} path="/reservations/new">
         <NewReservation />
       </Route>
+      {/* but now SeatReservation is called here and in dashboard...I JUST WANNA CALL IT WITH THE RESERVATION AND TABLES */}
       <Route exact={true} path="/reservations/:reservation_id/seat">
         <SeatReservation />
       </Route>
