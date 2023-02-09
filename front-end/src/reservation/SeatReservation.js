@@ -11,6 +11,7 @@ function SeatReservation({ refresh, setRefresh }) {
   const [readReservationsError, setReadReservationsError] = useState(null);
   const [tables, setTables] = useState([]);
   const [tablesError, setTablesError] = useState(null);
+  const [selected, setSelected] = useState("")
 
   const routeMatch = useRouteMatch();
   let reservationId = routeMatch.params.reservation_id;
@@ -46,7 +47,24 @@ function SeatReservation({ refresh, setRefresh }) {
     await seatTable(tableId, reservationId, abortController.signal)
       .then(() => {
         setRefresh(!refresh);
-        history.push("/dashboard");
+        history.goBack();
+      })
+      .catch(setTablesError);
+
+    return () => abortController.abort();
+  }
+
+  //   i need minor differences between the drop down select form and the normal buttons
+  async function seatOptionHandler() {
+    // selected will be table Id
+    let date = readReservation.reservation_date
+    let tableId = selected
+    const abortController = new AbortController();
+    // reservationId already declared, gotten from URL params
+    await seatTable(tableId, reservationId, abortController.signal)
+      .then(() => {
+        setRefresh(!refresh);
+        history.push(`/dashboard?date=${date}`);
       })
       .catch(setTablesError);
 
@@ -72,6 +90,10 @@ function SeatReservation({ refresh, setRefresh }) {
 
   function cancelHandler() {
     return history.goBack();
+  }
+
+  function changeHandler(event) {
+    setSelected(event.target.value)
   }
 
   return (
@@ -101,6 +123,34 @@ function SeatReservation({ refresh, setRefresh }) {
               <p className="card-text">{readReservation.reservation_date}</p>
             </div>
           </div>
+          <br />
+
+          <div>
+            <label>Seat At Which Table?</label>
+            <br />
+            <select className="form-select" id="table_id" name="table_id" value={selected} onChange={changeHandler}>
+              <option value="">--Please choose an option--</option>
+              {tables.map((table) => {
+                return (
+                  <option key={table.table_id} value={table.table_id}>
+                    {table.table_name} - {table.capacity}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          <br />
+
+          <div>
+            <button
+              className="btn btn-primary col-auto"
+              type="submit"
+              onClick={() => seatOptionHandler()}
+            >
+              Seat here
+            </button>
+          </div>
+          <br />
         </div>
       </div>
       <div>
