@@ -86,12 +86,14 @@ function validateTableName(req, res, next) {
 
 function validateCapacityIsNumber(req, res, next) {
   const capacity = req.body.data.capacity;
+  // react sends even numbers as strings, so test it with isNaN
   if (typeof capacity !== "number") {
     return next({
       status: 400,
       message: `capacity must be a number`,
     });
   }
+  // validate capacity greater than 0
   if (capacity <= 0) {
     return next({
       status: 400,
@@ -99,6 +101,19 @@ function validateCapacityIsNumber(req, res, next) {
     });
   }
   next();
+}
+
+async function validateNameIsUnique(req, res, next) {
+  const name = req.body.data.table_name
+  // searches DB based on the name, which should be unique
+  const table = await tablesService.readByName(name);
+  if (table) {
+    return next({
+      status:400,
+      message: `Table with name of ${name} already exists, and all table names must be unique`
+    })
+  }
+  next()
 }
 
 function hasDataWhenSeating(req, res, next) {
@@ -285,6 +300,7 @@ module.exports = {
     hasRequiredPropertiesOnCreate,
     validateTableName,
     validateCapacityIsNumber,
+    validateNameIsUnique,
     asyncErrorBoundary(create),
   ],
   read: [tableIdInParamsIsNumber, asyncErrorBoundary(tableExist), read],

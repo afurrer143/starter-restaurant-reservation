@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { listReservations } from "../utils/api";
+import { listReservations, listTables } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
+import ReservationCard from "./reservationCards";
+import TableCard from "./TableCards";
 import { useHistory, useLocation } from "react-router-dom";
 import { next, previous, today } from "../utils/date-time";
 
@@ -13,8 +15,10 @@ import { next, previous, today } from "../utils/date-time";
 // date is by default, today's date, and is not a state. Just a string
 function Dashboard() {
   const [reservations, setReservations] = useState([]);
-  const [date, setDate] = useState("");
   const [reservationsError, setReservationsError] = useState(null);
+  const [tables, setTables] = useState([]);
+  const [tablesError, setTablesError] = useState(null);
+  const [date, setDate] = useState("");
 
   const location = useLocation().search;
   const dateParameter = new URLSearchParams(location).get("date");
@@ -26,16 +30,24 @@ function Dashboard() {
   function loadDashboard() {
     const abortController = new AbortController();
     setReservationsError(null);
+    setTablesError(null);
     if (dateParameter !== null) {
       setDate(dateParameter);
     } else {
       setDate(today());
     }
+    // get all reservations, save in react
     listReservations({ date }, abortController.signal)
       .then(setReservations)
       .catch(setReservationsError);
+
+    // and this gets all tables, saved in react
+    listTables(abortController.signal).then(setTables).catch(setTablesError);
+
     return () => abortController.abort();
   }
+  console.log(tables);
+  console.log(reservations);
   // so currently reservations is an array of all my reservations matching date paramenter (defaulted to today)
 
   function PageHandler(number) {
@@ -57,11 +69,39 @@ function Dashboard() {
   return (
     <main>
       <h1>Dashboard</h1>
-      <div className="d-md-flex mb-3">
-        <h4 className="mb-0">Reservations for date</h4>
-      </div>
       <ErrorAlert error={reservationsError} />
-      {JSON.stringify(reservations)}
+      <ErrorAlert error={tablesError} />
+      <div className="container">
+        <div className="row">
+          <div className="col-8">
+            <div>
+              <h4 className="mb-0">Reservations for {date}</h4>
+            </div>
+            <div>
+              {reservations.map((reservation) => (
+                <ReservationCard
+                  key={reservation.reservation_id}
+                  reservation={reservation}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="col-4">
+            <div>
+              <h4>Tables:</h4>
+            </div>
+            <div>
+              {tables.map((table) => (
+                <TableCard
+                  key={table.table_id}
+                  table={table}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="d-flex">
         <div className="mr-auto p-1">
           <button

@@ -34,7 +34,7 @@ export function formatAsDate(dateString) {
  * @param timeString
  *  HH:MM:SS time string
  * @returns {*}
- *  the specified time string formatted as YHH:MM.
+ *  the specified time string formatted as HH:MM.
  */
 export function formatAsTime(timeString) {
   return timeString.match(timeFormat)[0];

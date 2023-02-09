@@ -34,7 +34,7 @@ function create(newReservation) {
     .then((createdRecords) => createdRecords[0]);
 }
 
-// read one specific reservation
+// read one specific reservation based on id
 function read(reservationId) {
   return knex("reservations")
     .select("*")

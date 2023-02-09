@@ -32,6 +32,14 @@ function read(tableId) {
     );
 }
 
+// Find a table, based on name
+function readByName(tableName) {
+  return knex("tables")
+    .select("*")
+    .where("table_name", tableName)
+    .first();
+}
+
 // updates the reservation id and status for a certain table
 // although when it returns info, it is just the table info, aka no reservation info
 function seatTable(seatedTableInfo) {
@@ -70,6 +78,7 @@ module.exports = {
   list,
   create,
   read,
+  readByName,
   seatTable,
   emptyATable,
 };

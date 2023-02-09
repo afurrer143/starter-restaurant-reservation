@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { useHistory } from "react-router";
 import { createReservation } from "../utils/api";
+import newReservationValidator from "./newReservationValidator";
 import ErrorAlert from "../layout/ErrorAlert";
 
-function Dashboard() {
+function NewReservation() {
   const history = useHistory();
   const initialFormState = {
     first_name: "",
@@ -22,16 +23,17 @@ function Dashboard() {
     const abortController = new AbortController();
     // clear error on each submit
     setError(null);
-    createReservation(newReservation, abortController.signal)
-      .then(() => {
-        // this clears the form. (not really needed, but also not really hurting)
-        setNewReservation({ ...initialFormState });
-        // then I need to redirect to dashboard, for the date of the reservation
-        let date = newReservation.reservation_date
-        history.push(`/dashboard?date=${date}`);
-      })
-      .catch(setError);
-    return () => abortController.abort()
+    let validateError = await newReservationValidator(newReservation, setError)
+    if (validateError === false) {
+        createReservation(newReservation, abortController.signal)
+          .then(() => {
+            //Need to redirect to dashboard, for the date of the reservation
+            let date = newReservation.reservation_date;
+            history.push(`/dashboard?date=${date}`);
+          })
+          .catch(setError);
+        return () => abortController.abort();
+    }
   }
 
   function changeHandler({ target: { name, value } }) {
@@ -153,4 +155,4 @@ function Dashboard() {
   );
 }
 
-export default Dashboard;
+export default NewReservation;

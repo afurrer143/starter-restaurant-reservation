@@ -80,16 +80,18 @@ function validateMobileNumber(req, res, next) {
     });
   }
   // if phone number passes, wanna clean the phone number, remove characters barring numbers EX (281)-555-2424 becomes 2815552424
-  phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
-  // then gonna add dashes so all numbers will be nice and uniform.
-  phoneNumber =
-    phoneNumber.slice(0, 3) +
-    "-" +
-    phoneNumber.slice(3, 6) +
-    "-" +
-    phoneNumber.slice(6);
+  // NOTE THE TEST LOOK FOR VERY SPECIFICALLY JUST 1231231235. so can not format it
 
-    req.body.data.mobile_number = phoneNumber
+  // phoneNumber = phoneNumber.replace(/[^0-9]/g, '');
+  // // then gonna add dashes so all numbers will be nice and uniform.
+  // phoneNumber =
+  //   phoneNumber.slice(0, 3) +
+  //   "-" +
+  //   phoneNumber.slice(3, 6) +
+  //   "-" +
+  //   phoneNumber.slice(6);
+
+    // req.body.data.mobile_number = phoneNumber
 
     next()
 }
@@ -112,7 +114,8 @@ function reservation_timeIsTime(req, res, next) {
 // Function people is a number
 function peopleIsValidNumber(req, res, next) {
   const people = req.body.data.people;
-  if (isNaN(people)) {
+  // So it very specifically tests with people: "2" to error out
+  if (typeof people !== "number") {
     // if people isnt number, error out
     return next({
       status: 400,
