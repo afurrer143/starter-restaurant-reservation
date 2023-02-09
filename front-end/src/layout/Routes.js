@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { Redirect, Route, Switch } from "react-router-dom";
 import Dashboard from "../dashboard/Dashboard";
@@ -17,6 +17,7 @@ import { today } from "../utils/date-time";
  * @returns {JSX.Element}
  */
 function Routes() {
+  const [refresh, setRefresh] = useState(false)
   return (
     <Switch>
       <Route exact={true} path="/">
@@ -31,13 +32,13 @@ function Routes() {
       </Route>
       {/* but now SeatReservation is called here and in dashboard...I JUST WANNA CALL IT WITH THE RESERVATION AND TABLES */}
       <Route exact={true} path="/reservations/:reservation_id/seat">
-        <SeatReservation />
+        <SeatReservation refresh = {refresh} setRefresh={setRefresh} />
       </Route>
       <Route exact={true} path="/tables/new">
         <NewTable />
       </Route>
       <Route path="/dashboard">
-        <Dashboard date={today()} />
+        <Dashboard refresh = {refresh} setRefresh={setRefresh} date={today()} />
       </Route>
       <Route>
         <NotFound />

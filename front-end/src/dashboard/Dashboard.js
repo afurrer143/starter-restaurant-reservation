@@ -13,7 +13,7 @@ import { next, previous, today } from "../utils/date-time";
  * @returns {JSX.Element}
  */
 // date is by default, today's date, and is not a state. Just a string
-function Dashboard() {
+function Dashboard({refresh, setRefresh}) {
   const [reservations, setReservations] = useState([]);
   const [reservationsError, setReservationsError] = useState(null);
   const [tables, setTables] = useState([]);
@@ -27,7 +27,7 @@ function Dashboard() {
 
   
 
-  useEffect(loadDashboard, [date, dateParameter]);
+  useEffect(loadDashboard, [date, dateParameter, refresh]);
 
   function loadDashboard() {
     const abortController = new AbortController();
