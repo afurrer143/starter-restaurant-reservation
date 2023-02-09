@@ -269,7 +269,13 @@ async function seatTableAndSetStatus (req, res) {
         tableStatus: "Occupied",
     }
     const data = await setReservationStatusAndSeatTable(tableAndReservationInfo)
-    res.json(data)
+    // since i am doing a knex transaction, i do not know how to return info from it, so we do this
+    res.json({data: {
+      Reservation_id: req.body.data.reservation_id, 
+      table_id:req.params.table_id,
+      reservation_status: "seated",
+      table_status: "Occupied"
+    }})
 }
 
 async function emptyATableAndSetStatus(req, res) {
@@ -282,7 +288,12 @@ async function emptyATableAndSetStatus(req, res) {
         tableStatus: "Free",
     };
     const data = await setReservationStatusAndSeatTable(emptiedTableAndReservationInfo)
-    res.json(data);
+    res.json({data: {
+      Reservation_id: req.body.data.reservation_id, 
+      table_id:req.params.table_id,
+      reservation_status: "finished",
+      table_status: "Free"
+    }})
     //   the e2e testing check the db, so it needs a .get, but i am pretty sure that is react sided
   }
   

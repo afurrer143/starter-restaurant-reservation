@@ -1,6 +1,6 @@
 import React from "react";
 
-function TableCard({ table }) {
+function TableCard({ table, options }) {
   let bgColor = "bg-info-subtle"
   if (table.table_status === "Free") {
     bgColor = "bg-info-subtle"
@@ -12,6 +12,11 @@ function TableCard({ table }) {
     bgColor = "bg-danger"
   }
 
+  let button = null
+  if (options) {
+    button = options(table.table_status, table.table_id)
+  }
+
   return (
     <div className="card my-3">
       <div className={`card-body ${bgColor}`}>
@@ -19,6 +24,7 @@ function TableCard({ table }) {
         <p className="card-text">Table: {table.table_name}</p>
         <p className="card-text">Capacity: {table.capacity}</p>
         <p className="card-text">Status: {table.table_status}</p>
+        {button}
       </div>
     </div>
   );

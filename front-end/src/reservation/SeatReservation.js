@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useRouteMatch } from "react-router";
 import { readReservations, listTables } from "../utils/api";
 import { formatAsTime } from "../utils/date-time";
+import { seatTable } from "../utils/api";
 import TableCard from "../dashboard/TableCards";
 import ErrorAlert from "../layout/ErrorAlert";
 
@@ -10,16 +11,12 @@ function SeatReservation() {
   const [readReservationsError, setReadReservationsError] = useState(null);
   const [tables, setTables] = useState([]);
   const [tablesError, setTablesError] = useState(null);
+  const [tableSeated, setTableSeated] = useState(false)
 
   const routeMatch = useRouteMatch();
   let reservationId = routeMatch.params.reservation_id;
-  // so i should get a way, to get the current reservation in here.
-  // I also need all tables here too
-  // but SeatReservation is called in routes, With no params
-  // And tables and reservations are made in dashboard.js
-  // It would be so nice, if i could just call this component in DashBoard. But even adding Switch and Routs it did not work...but maybe there is some way...I hope
-  // I think i am just gonna make a read function. I mean i already made one in backend so may as well use it
-  useEffect(loadReservation, []);
+
+  useEffect(loadReservation, [reservationId, tableSeated]);
 
   function loadReservation() {
     const abortController = new AbortController();
@@ -33,8 +30,6 @@ function SeatReservation() {
     return () => abortController.abort();
   }
 
-  console.log(readReservation);
-
   //   need to test if readReservation has finished, other wise {formatAsTime(readReservation.reservation_time) will crash the program since time will be undefined
   if (JSON.stringify(readReservation) === "{}") {
     return (
@@ -42,6 +37,27 @@ function SeatReservation() {
         <ErrorAlert error={readReservationsError} />
       </div>
     );
+  }
+
+  async function seatHandler(tableId) {
+    const abortController = new AbortController();
+    // reservationId already declared, gotten from URL params
+    await seatTable(tableId, reservationId ,abortController.signal)
+        .then(loadReservation())
+        .catch(setTablesError)
+
+    return () => abortController.abort();
+  }
+
+//   so that the seat button only appears on seat page, i call this function into the params of TableCard, where it then runs it
+  function button(status, tableId) {
+    if (status !== "Occupied") {
+        return (
+            <div>
+                <button className="btn btn-primary" type="submit" onClick={() => seatHandler(tableId)}>Seat here</button>
+            </div>
+        )
+    }
   }
 
   return (
@@ -79,7 +95,8 @@ function SeatReservation() {
         </div>
         <div>
           {tables.map((table) => (
-            <TableCard key={table.table_id} table={table} />
+            // since i need a button on the tables, but i am just calling TableCard, and do not want button on the dashboard, I will just give it a buttom param it is called with
+            <TableCard key={table.table_id} table={table} options={button}/>
           ))}
         </div>
       </div>

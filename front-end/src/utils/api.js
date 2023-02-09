@@ -96,7 +96,8 @@ export async function createReservation(newReservation, signal) {
     body: JSON.stringify({ data: newReservation }),
     signal,
   };
-  return await fetchJson(url, options);
+  await fetchJson(url, options);
+  return "seated"
 }
 
 
@@ -127,4 +128,21 @@ export async function readReservations(id, signal) {
   return await fetchJson(url, { headers, signal }, [])
     .then(formatReservationDate)
     .then(formatReservationTime);
+}
+
+/**
+ * Seats a table, at a specified table
+ * @returns {Promise<{reservation}>}
+ *  a promise that resolves to the newly created table.
+ */
+export async function seatTable(tableId, reservationId, signal) {
+  const url = `${API_BASE_URL}/tables/${tableId}/seat`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data: {reservation_id: reservationId} }),
+    signal,
+  };
+  // seating a table doesnt send any response back from DB
+  return await fetchJson(url, options);
 }
