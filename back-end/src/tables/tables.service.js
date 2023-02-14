@@ -2,11 +2,23 @@ const knex = require("../db/connection");
 
 // list returns the entirety of the reservation table
 function list() {
-  return knex("tables").select("*").orderBy("table_name");
-}
+  return knex("tables as t")
+    .leftJoin("reservations as r", "r.reservation_id", "t.reservation_id")
+    .select(
+      "t.*",
+      "r.reservation_id",
+      "r.first_name",
+      "r.last_name",
+      "r.mobile_number",
+      "r.reservation_date",
+      "r.reservation_time",
+      "r.people",
+      "r.status"
+      )
+      .orderBy("t.table_name")
+    }
 
 function create(newTable) {
-  //I technically do not need this in capstone, as I seed the info instead
   return knex("tables")
     .insert(newTable)
     .returning("*")
@@ -34,10 +46,7 @@ function read(tableId) {
 
 // Find a table, based on name
 function readByName(tableName) {
-  return knex("tables")
-    .select("*")
-    .where("table_name", tableName)
-    .first();
+  return knex("tables").select("*").where("table_name", tableName).first();
 }
 
 // updates the reservation id and status for a certain table
@@ -54,21 +63,21 @@ function seatTable(seatedTableInfo) {
 }
 
 function emptyATable(emptiedTableInfo) {
-    let { tableId, reservationId, tableStatus } = emptiedTableInfo;
-    return knex("tables").where("table_id", tableId).update(
-      {
-        reservation_id: reservationId,
-        table_status: tableStatus,
-      },
-      "*"
-    );
-  }
+  let { tableId, reservationId, tableStatus } = emptiedTableInfo;
+  return knex("tables").where("table_id", tableId).update(
+    {
+      reservation_id: reservationId,
+      table_status: tableStatus,
+    },
+    "*"
+  );
+}
 
 //   knex.transaction(async (trx) => {
 //     await trx('reservations').where("reservation_id", reservationId).update({ status: tableStatus });
-  
+
 //     await trx('tables').where("table_id", tableId).update({ reservation_id: reservationId, table_status: tableStatus });
-  
+
 //     return trx.commit();
 //   }).catch((err) => {
 //     console.error(err);

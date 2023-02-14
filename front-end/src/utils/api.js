@@ -146,3 +146,68 @@ export async function seatTable(tableId, reservationId, signal) {
   // seating a table doesnt send any response back from DB
   return await fetchJson(url, options);
 }
+
+/**
+ * Clears a table, at a specified table
+ * @returns {Promise<{reservation}>}
+ *  a promise that sets a status on table to clear, and reservation on it to finished table.
+ */
+export async function clearTable(tableId, reservationId, signal) {
+  const url = `${API_BASE_URL}/tables/${tableId}/seat`;
+  const options = {
+    method: "DELETE",
+    headers,
+    body: JSON.stringify({ data: {reservation_id: reservationId} }),
+    signal,
+  };
+  // seating a table doesnt send any response back from DB
+  return await fetchJson(url, options);
+}
+
+/**
+ * Retrieves a array of reservations based on phone number.
+ * @returns {Promise<[reservation]>}
+ *  a promise that resolves to an array of reservations saved in the database.
+ */
+
+export async function searchReservationsByPhone(phoneNumber, signal) {
+  const url = new URL(`${API_BASE_URL}/reservations?mobile_number=${phoneNumber}`);
+  return await fetchJson(url, { headers, signal }, [])
+    .then(formatReservationDate)
+    .then(formatReservationTime);
+}
+
+
+/**
+ * Cancels a reservation
+ * @returns {Promise<{reservation}>}
+ *  a promise that resolves to a specific reservation, with a status of 'cancelled.
+ */
+export async function cancelReservation(reservationId, signal) {
+  const url = `${API_BASE_URL}/reservations/${reservationId}/status`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data: {status: "cancelled"} }),
+    signal,
+  };
+  // seating a table doesnt send any response back from DB
+  return await fetchJson(url, options);
+}
+
+/**
+ * Edit a reservation
+ * @returns {Promise<{reservation}>}
+ *  a promise that resolves to the newly edited reservation.
+ */
+export async function editReservation(reservationId, updatedReservation, signal) {
+  const url = `${API_BASE_URL}/reservations/${reservationId}`;
+  const options = {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({ data: updatedReservation }),
+    signal,
+  };
+  // seating a table doesnt send any response back from DB
+  return await fetchJson(url, options);
+}

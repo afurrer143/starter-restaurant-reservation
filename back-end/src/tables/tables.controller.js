@@ -2,8 +2,7 @@ const tablesService = require("./tables.service");
 const asyncErrorBoundary = require("../errors/asyncErrorBoundary"); //only need to use asyncErrorBound on async functions
 const reduceProperties = require("../utils/reduce-properties");
 const reservationService = require("../reservations/reservations.service");
-const setReservationStatusAndSeatTable = require("../knexTransactions/setStatusAndSeatTable")
-
+const setReservationStatusAndSeatTable = require("../knexTransactions/setStatusAndSeatTable");
 
 // Used to format response to RESTFUL
 const reduceTablesAndReservation = reduceProperties("table_id", {
@@ -104,16 +103,16 @@ function validateCapacityIsNumber(req, res, next) {
 }
 
 async function validateNameIsUnique(req, res, next) {
-  const name = req.body.data.table_name
+  const name = req.body.data.table_name;
   // searches DB based on the name, which should be unique
   const table = await tablesService.readByName(name);
   if (table) {
     return next({
-      status:400,
-      message: `Table with name of ${name} already exists, and all table names must be unique`
-    })
+      status: 400,
+      message: `Table with name of ${name} already exists, and all table names must be unique`,
+    });
   }
-  next()
+  next();
 }
 
 function hasDataWhenSeating(req, res, next) {
@@ -128,7 +127,7 @@ function hasDataWhenSeating(req, res, next) {
 
 // just some basic validation of table id in req params, like is number
 function tableIdInParamsIsNumber(req, res, next) {
-    // realisitcally this one is imposibble to fail since read is only on /tables/:table_id, but hey you never know
+  // realisitcally this one is imposibble to fail since read is only on /tables/:table_id, but hey you never know
   if (!req.params.table_id) {
     return next({
       status: 400,
@@ -165,7 +164,7 @@ async function tableExist(req, res, next) {
 async function validateReservationId(req, res, next) {
   // so first reservation id must be in the req.body
   // and beyond that, i need to verify that a reservation matches that Id
-  
+
   //I need to validate the req.body has resvId, cause if I do just on res.locals.table it could have a reservation ID, and this function/ test is for SEATING empty tables only
   if (!req.body.data.reservation_id) {
     return next({
@@ -188,14 +187,14 @@ async function validateReservationId(req, res, next) {
 
 // used in seating a table, if table is seated, can not seat again
 function checkIfReservationNotSeated(req, res, next) {
-    let reservation = res.locals.currentReservation
-    if (reservation.status === "seated") {
-        return next({
-            status:400,
-            message: `current reservation of id '${reservation.reservation_id}' is already seated`
-        })
-    }
-    next()
+  let reservation = res.locals.currentReservation;
+  if (reservation.status === "booked") {
+    return next();
+  }
+  return next({
+    status: 400,
+    message: `current reservation of id '${reservation.reservation_id}' has status of ${reservation.status} and can not be seated currently`,
+  });
 }
 
 function validateCapacityOnSeating(req, res, next) {
@@ -215,7 +214,7 @@ function validateCapacityOnSeating(req, res, next) {
 
 function tableIsFree(req, res, next) {
   let table = res.locals.table[0];
-  if (table.table_status === "Occupied") {
+  if (table.table_status === "occupied") {
     return next({
       status: 400,
       message: `selected table of ${table.table_name} with an id of: ${table.table_id} is currently occupied and can not be seated current`,
@@ -226,11 +225,20 @@ function tableIsFree(req, res, next) {
 
 function tableIsOccupied(req, res, next) {
   let table = res.locals.table[0];
-  if (table.table_status === "Free") {
+  if (table.table_status === "free") {
     return next({
       status: 400,
       message: `selected table of ${table.table_name} with an id of: ${table.table_id} is currently not occupied and can not be emptied`,
     });
+  }
+  next();
+}
+
+// when creating a table, we can optionally already assign it a reservation Id, and if so make the table_status "occupied"
+function ifResevationIdPresentStatusIsOccupied(req, res, next) {
+  if (req.body.data.reservation_id) {
+    req.body.data.table_status = "occupied";
+    return next();
   }
   next();
 }
@@ -260,49 +268,49 @@ async function read(req, res) {
 
 // So on seat table, I need to ALSO change status on reservation, using the function setStatus (and on seating table it will always be status "seated") and later on emptyATable, I must set status to finished
 // I can use knex transaction to do seatTable and setStatus
-async function seatTableAndSetStatus (req, res) {
-    let tableAndReservationInfo = {
-        reservationId: req.body.data.reservation_id,
-        newReservationId: req.body.data.reservation_id,
-        reservationStatus: "seated",
-        tableId: req.params.table_id,
-        tableStatus: "Occupied",
-    }
-    const data = await setReservationStatusAndSeatTable(tableAndReservationInfo)
-    // since i am doing a knex transaction, i do not know how to return info from it, so we do this
-    res.json({data: {
-      Reservation_id: req.body.data.reservation_id, 
-      table_id:req.params.table_id,
+async function seatTableAndSetStatus(req, res) {
+  let tableAndReservationInfo = {
+    reservationId: req.body.data.reservation_id,
+    newReservationId: req.body.data.reservation_id,
+    reservationStatus: "seated",
+    tableId: req.params.table_id,
+    tableStatus: "occupied",
+  };
+  const data = await setReservationStatusAndSeatTable(tableAndReservationInfo);
+  // since i am doing a knex transaction, i do not know how to return info from it, so we do this
+  res.json({
+    data: {
+      table_id: req.params.table_id,
       reservation_status: "seated",
-      table_status: "Occupied"
-    }})
+      table_status: "occupied",
+    },
+  });
 }
 
 async function emptyATableAndSetStatus(req, res) {
-
-    let emptiedTableAndReservationInfo = {
-        reservationId: res.locals.table[0].reservation_id,
-        newReservationId: null,
-        reservationStatus: "finished",
-        tableId: req.params.table_id,
-        tableStatus: "Free",
-    };
-    const data = await setReservationStatusAndSeatTable(emptiedTableAndReservationInfo)
-    res.json({data: {
-      Reservation_id: req.body.data.reservation_id, 
-      table_id:req.params.table_id,
+  let emptiedTableAndReservationInfo = {
+    reservationId: res.locals.table[0].reservation_id,
+    newReservationId: null,
+    reservationStatus: "finished",
+    tableId: req.params.table_id,
+    tableStatus: "free",
+  };
+  const data = await setReservationStatusAndSeatTable(
+    emptiedTableAndReservationInfo
+  );
+  res.json({
+    data: {
+      table_id: req.params.table_id,
       reservation_status: "finished",
-      table_status: "Free"
-    }})
-    //   the e2e testing check the db, so it needs a .get, but i am pretty sure that is react sided
-  }
-  
+      table_status: "free",
+    },
+  });
+  //   the e2e testing check the db, so it needs a .get, but i am pretty sure that is react sided
+}
 
 // so even EmptyATable is on a .delete, and while I doubt I should delete the entire table row, just delete reservation id table_status
 // probably just gonna do a .put
 //   the e2e testing check the db, so it needs a .get, but i am pretty sure that is react sided
-
-
 
 module.exports = {
   list: [asyncErrorBoundary(list)],
@@ -312,6 +320,7 @@ module.exports = {
     validateTableName,
     validateCapacityIsNumber,
     validateNameIsUnique,
+    ifResevationIdPresentStatusIsOccupied,
     asyncErrorBoundary(create),
   ],
   read: [tableIdInParamsIsNumber, asyncErrorBoundary(tableExist), read],

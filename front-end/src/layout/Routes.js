@@ -6,8 +6,10 @@ import NotFound from "./NotFound";
 import NewReservation from "../reservation/newReservation"
 import NewTable from "../table/newTable"
 import SeatReservation from "../reservation/SeatReservation";
+import SearchPage from "../Search/SearchPage";
 
 import { today } from "../utils/date-time";
+import EditReservation from "../EditReservation/EditReservation";
 
 /**
  * Defines all the routes for the application.
@@ -30,12 +32,17 @@ function Routes() {
       <Route exact={true} path="/reservations/new">
         <NewReservation />
       </Route>
-      {/* but now SeatReservation is called here and in dashboard...I JUST WANNA CALL IT WITH THE RESERVATION AND TABLES */}
       <Route exact={true} path="/reservations/:reservation_id/seat">
         <SeatReservation refresh = {refresh} setRefresh={setRefresh} />
       </Route>
+      <Route exact={true} path="/reservations/:reservation_id/edit">
+        <EditReservation refresh = {refresh} setRefresh={setRefresh} />
+      </Route>
       <Route exact={true} path="/tables/new">
         <NewTable />
+      </Route>
+      <Route exact={true} path="/search">
+        <SearchPage refresh = {refresh} setRefresh={setRefresh}/>
       </Route>
       <Route path="/dashboard">
         <Dashboard refresh = {refresh} setRefresh={setRefresh} date={today()} />

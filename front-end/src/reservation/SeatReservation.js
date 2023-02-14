@@ -11,7 +11,7 @@ function SeatReservation({ refresh, setRefresh }) {
   const [readReservationsError, setReadReservationsError] = useState(null);
   const [tables, setTables] = useState([]);
   const [tablesError, setTablesError] = useState(null);
-  const [selected, setSelected] = useState("")
+  const [selected, setSelected] = useState("");
 
   const routeMatch = useRouteMatch();
   let reservationId = routeMatch.params.reservation_id;
@@ -57,8 +57,8 @@ function SeatReservation({ refresh, setRefresh }) {
   //   i need minor differences between the drop down select form and the normal buttons
   async function seatOptionHandler() {
     // selected will be table Id
-    let date = readReservation.reservation_date
-    let tableId = selected
+    let date = readReservation.reservation_date;
+    let tableId = selected;
     const abortController = new AbortController();
     // reservationId already declared, gotten from URL params
     await seatTable(tableId, reservationId, abortController.signal)
@@ -73,7 +73,7 @@ function SeatReservation({ refresh, setRefresh }) {
 
   //   so that the seat button only appears on seat page, i call this function into the params of TableCard, where it then runs it
   function button(status, tableId) {
-    if (status !== "Occupied") {
+    if (status !== "occupied") {
       return (
         <div>
           <button
@@ -93,7 +93,7 @@ function SeatReservation({ refresh, setRefresh }) {
   }
 
   function changeHandler(event) {
-    setSelected(event.target.value)
+    setSelected(event.target.value);
   }
 
   return (
@@ -128,14 +128,24 @@ function SeatReservation({ refresh, setRefresh }) {
           <div>
             <label>Seat At Which Table?</label>
             <br />
-            <select className="form-select" id="table_id" name="table_id" value={selected} onChange={changeHandler}>
+            <select
+              className="form-select"
+              id="table_id"
+              name="table_id"
+              value={selected}
+              onChange={changeHandler}
+            >
               <option value="">--Please choose an option--</option>
               {tables.map((table) => {
-                return (
-                  <option key={table.table_id} value={table.table_id}>
-                    {table.table_name} - {table.capacity}
-                  </option>
-                );
+                if (table.table_status === "free") {
+                  return (
+                    <option key={table.table_id} value={table.table_id}>
+                      {table.table_name} - {table.capacity}
+                    </option>
+                  )
+                } else {
+                  return null
+                }
               })}
             </select>
           </div>

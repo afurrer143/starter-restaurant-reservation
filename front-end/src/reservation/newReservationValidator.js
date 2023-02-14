@@ -1,9 +1,27 @@
-async function newReservationValidator(
-  newReservation,
-  setError
-) {
+async function newReservationValidator(newReservation, setError) {
   setError(null);
-  for (let element in newReservation) {
+
+  // since i wanna use this in edit which has the entire reservation info, i need to first filter out the excess information. Such as "created_at" or even reservation_id
+
+  const desiredKeys = [
+    "first_name",
+    "last_name",
+    "mobile_number",
+    "reservation_date",
+    "reservation_time",
+    "people",
+  ];
+
+  const filteredObject = Object.keys(newReservation)
+    .filter((key) => desiredKeys.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = newReservation[key];
+      return obj;
+    }, {});
+
+
+
+  for (let element in filteredObject) {
     if (element === "people") {
       // .trim can mess up on not strings, so not even gonna try trimming it
       newReservation[element] = Number(newReservation[element]);
@@ -11,6 +29,7 @@ async function newReservationValidator(
       newReservation[element] = newReservation[element].trim();
     }
   }
+
   let {
     first_name,
     last_name,

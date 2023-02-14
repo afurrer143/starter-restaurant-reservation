@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { listReservations, listTables } from "../utils/api";
+import { listReservations, listTables, clearTable } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
 import ReservationCard from "./reservationCards";
 import TableCard from "./TableCards";
@@ -48,8 +48,6 @@ function Dashboard({refresh, setRefresh}) {
 
     return () => abortController.abort();
   }
-  console.log(tables);
-  console.log(reservations);
   // so currently reservations is an array of all my reservations matching date paramenter (defaulted to today)
 
   function PageHandler(number) {
@@ -68,6 +66,37 @@ function Dashboard({refresh, setRefresh}) {
     history.push(`/dashboard?date=${newDate}`);
   }
 
+    //   so that the seat button only appears on seat page, i call this function into the params of TableCard, where it then runs it
+    function button(status, tableId, reservationId) {
+      if (status === "occupied") {
+        return (
+          <div>
+            <button
+              className={`btn btn-primary`}
+              type="submit"
+              data-table-id-finish={tableId}
+              onClick={() => clearTableHandler(tableId, reservationId)}
+            >
+              Finish
+            </button>
+          </div>
+        );
+      }
+    }
+
+    async function clearTableHandler(tableId, reservationId) {
+      if (window.confirm("Is this table ready to seat new guests?")) {
+        // api call to clear table
+        const abortController = new AbortController();
+        await clearTable(tableId, reservationId, abortController.signal)
+          .then(() => {
+            setRefresh(!refresh);
+          })
+          .catch(setTablesError)
+        
+      }
+    }
+
   return (
       <main>
         <h1>Dashboard</h1>
@@ -84,6 +113,8 @@ function Dashboard({refresh, setRefresh}) {
                   <ReservationCard
                     key={reservation.reservation_id}
                     reservation={reservation}
+                    refresh={refresh}
+                    setRefresh={setRefresh}
                   />
                 ))}
               </div>
@@ -94,7 +125,7 @@ function Dashboard({refresh, setRefresh}) {
               </div>
               <div>
                 {tables.map((table) => (
-                  <TableCard key={table.table_id} table={table} />
+                  <TableCard key={table.table_id} table={table} options={button}/>
                 ))}
               </div>
             </div>
