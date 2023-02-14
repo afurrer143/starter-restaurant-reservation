@@ -66,36 +66,36 @@ function Dashboard({refresh, setRefresh}) {
     history.push(`/dashboard?date=${newDate}`);
   }
 
-    //   so that the seat button only appears on seat page, i call this function into the params of TableCard, where it then runs it
-    function button(status, tableId, reservationId) {
-      if (status === "occupied") {
-        return (
-          <div>
-            <button
-              className={`btn btn-primary`}
-              type="submit"
-              data-table-id-finish={tableId}
-              onClick={() => clearTableHandler(tableId, reservationId)}
-            >
-              Finish
-            </button>
-          </div>
-        );
-      }
-    }
+    // //   so that the seat button only appears on seat page, i call this function into the params of TableCard, where it then runs it
+    // function button(status, tableId, reservationId) {
+    //   if (status === "occupied") {
+    //     return (
+    //       <div>
+    //         <button
+    //           className={`btn btn-primary`}
+    //           type="submit"
+    //           data-table-id-finish={tableId}
+    //           onClick={() => clearTableHandler(tableId, reservationId)}
+    //         >
+    //           Finish
+    //         </button>
+    //       </div>
+    //     );
+    //   }
+    // }
 
-    async function clearTableHandler(tableId, reservationId) {
-      if (window.confirm("Is this table ready to seat new guests?")) {
-        // api call to clear table
-        const abortController = new AbortController();
-        await clearTable(tableId, reservationId, abortController.signal)
-          .then(() => {
-            setRefresh(!refresh);
-          })
-          .catch(setTablesError)
+    // async function clearTableHandler(tableId, reservationId) {
+    //   if (window.confirm("Is this table ready to seat new guests?")) {
+    //     // api call to clear table
+    //     const abortController = new AbortController();
+    //     await clearTable(tableId, reservationId, abortController.signal)
+    //       .then(() => {
+    //         setRefresh(!refresh);
+    //       })
+    //       .catch(setTablesError)
         
-      }
-    }
+    //   }
+    // }
 
   return (
       <main>
@@ -125,7 +125,7 @@ function Dashboard({refresh, setRefresh}) {
               </div>
               <div>
                 {tables.map((table) => (
-                  <TableCard key={table.table_id} table={table} options={button}/>
+                  <TableCard key={table.table_id} table={table} refresh={refresh} setRefresh={setRefresh} setTablesError={setTablesError} />
                 ))}
               </div>
             </div>

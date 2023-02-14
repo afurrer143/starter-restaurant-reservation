@@ -1,9 +1,10 @@
 import { formatAsTime } from "../utils/date-time";
+import FinishTable from "../table/finishTable";
 import React from "react";
 
 // option is a button param (pretty bad name i know) to allow an optional button to show depending where TableCard is called
 // i really should make a thing, where when it has a reservation_id (or could use status, but reservation_id is more bug proof) that it shows info from the reservation too
-function TableCard({ table, options }) {
+function TableCard({ table }) {
   let bgColor = "bg-info-subtle";
   if (table.table_status === "free") {
     bgColor = "bg-info-subtle";
@@ -29,7 +30,7 @@ function TableCard({ table, options }) {
             Status: <span>{table.table_status}</span>
           </p>
           <p> Seated at: {formatAsTime(table.reservation_time)} </p>
-          {button}
+          <FinishTable />
         </div>
       </div>
     );
