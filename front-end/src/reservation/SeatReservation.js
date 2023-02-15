@@ -18,7 +18,7 @@ function SeatReservation({ refresh, setRefresh }) {
 
   const history = useHistory();
 
-  useEffect(loadReservation, [reservationId, refresh]);
+  useEffect(loadReservation, [reservationId]);
 
   function loadReservation() {
     const abortController = new AbortController();
@@ -41,10 +41,10 @@ function SeatReservation({ refresh, setRefresh }) {
     );
   }
 
-  async function seatHandler(tableId) {
+  function seatHandler(tableId) {
     const abortController = new AbortController();
     // reservationId already declared, gotten from URL params
-    await seatTable(tableId, reservationId, abortController.signal)
+    seatTable(tableId, reservationId, abortController.signal)
       .then(() => {
         setRefresh(!refresh);
         history.goBack();
@@ -55,13 +55,13 @@ function SeatReservation({ refresh, setRefresh }) {
   }
 
   //   i need minor differences between the drop down select form and the normal buttons
-  async function seatOptionHandler() {
+  function seatOptionHandler() {
     // selected will be table Id
     let date = readReservation.reservation_date;
     let tableId = selected;
     const abortController = new AbortController();
     // reservationId already declared, gotten from URL params
-    await seatTable(tableId, reservationId, abortController.signal)
+    seatTable(tableId, reservationId, abortController.signal)
       .then(() => {
         setRefresh(!refresh);
         history.push(`/dashboard?date=${date}`);

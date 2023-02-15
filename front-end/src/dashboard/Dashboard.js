@@ -68,7 +68,8 @@ function Dashboard({refresh, setRefresh}) {
     history.push(`/dashboard?date=${newDate}`);
   }
 
-    //   so that the seat button only appears on seat page, i call this function into the params of TableCard, where it then runs it
+    // Put this in button, and call it in table card, so Finish button only shows on dashboard
+    // the dreaded finish button
     function button(status, tableId, reservationId) {
       if (status === "occupied") {
         return (
@@ -86,16 +87,15 @@ function Dashboard({refresh, setRefresh}) {
       }
     }
 
-    async function clearTableHandler(tableId, reservationId) {
+    // the dreaded finish button function
+    function clearTableHandler(tableId, reservationId) {
       if (window.confirm("Is this table ready to seat new guests?")) {
         // api call to clear table
         const abortController = new AbortController();
-        await clearTable(tableId, reservationId, abortController.signal)
+        clearTable(tableId, reservationId, abortController.signal)
           .then(() => {
             // e2e testing needs a datebase refresh after, so i will just call load dashboard
             loadDashboard()
-            
-            // setRefresh(!refresh);
           })
           .catch(setTablesError)
         
