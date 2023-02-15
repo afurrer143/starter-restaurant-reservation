@@ -4,7 +4,7 @@ import ErrorAlert from "../layout/ErrorAlert";
 import { createTable } from "../utils/api";
 import newTableValidator from "./newTableValidator";
 
-function NewTable() {
+function NewTable({refresh, setRefresh}) {
   const history = useHistory();
   // initial default state for the table
   const initialFormState = {
@@ -24,7 +24,8 @@ function NewTable() {
     if (validateError === false) {
         createTable(newTable, abortController.signal)
           .then(() => {
-            setNewTable({ ...initialFormState });
+            setNewTable({ ...initialFormState })
+            setRefresh(!refresh)
             history.push(`/dashboard`);
           })
           .catch(setError);

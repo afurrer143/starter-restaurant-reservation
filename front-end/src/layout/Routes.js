@@ -3,8 +3,8 @@ import React, { useState } from "react";
 import { Redirect, Route, Switch } from "react-router-dom";
 import Dashboard from "../dashboard/Dashboard";
 import NotFound from "./NotFound";
-import NewReservation from "../reservation/newReservation"
-import NewTable from "../table/newTable"
+import NewReservation from "../reservation/newReservation";
+import NewTable from "../table/newTable";
 import SeatReservation from "../reservation/SeatReservation";
 import SearchPage from "../Search/SearchPage";
 
@@ -19,7 +19,8 @@ import EditReservation from "../EditReservation/EditReservation";
  * @returns {JSX.Element}
  */
 function Routes() {
-  const [refresh, setRefresh] = useState(false)
+  const [refresh, setRefresh] = useState(false);
+
   return (
     <Switch>
       <Route exact={true} path="/">
@@ -30,22 +31,22 @@ function Routes() {
       </Route>
       {/* I feel like my routes go here */}
       <Route exact={true} path="/reservations/new">
-        <NewReservation />
+        <NewReservation refresh={refresh} setRefresh={setRefresh} />
       </Route>
       <Route exact={true} path="/reservations/:reservation_id/seat">
-        <SeatReservation refresh = {refresh} setRefresh={setRefresh} />
+        <SeatReservation refresh={refresh} setRefresh={setRefresh} />
       </Route>
       <Route exact={true} path="/reservations/:reservation_id/edit">
-        <EditReservation refresh = {refresh} setRefresh={setRefresh} />
+        <EditReservation refresh={refresh} setRefresh={setRefresh} />
       </Route>
       <Route exact={true} path="/tables/new">
-        <NewTable />
+        <NewTable refresh={refresh} setRefresh={setRefresh} />
       </Route>
       <Route exact={true} path="/search">
-        <SearchPage refresh = {refresh} setRefresh={setRefresh}/>
+        <SearchPage refresh={refresh} setRefresh={setRefresh} />
       </Route>
       <Route path="/dashboard">
-        <Dashboard refresh = {refresh} setRefresh={setRefresh} date={today()} />
+        <Dashboard refresh={refresh} setRefresh={setRefresh} date={today()} />
       </Route>
       <Route>
         <NotFound />

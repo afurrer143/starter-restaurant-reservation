@@ -44,7 +44,9 @@ function Dashboard({refresh, setRefresh}) {
       .catch(setReservationsError);
 
     // and this gets all tables, saved in react
-    listTables(abortController.signal).then(setTables).catch(setTablesError);
+    listTables(abortController.signal)
+      .then(setTables)
+      .catch(setTablesError);
 
     return () => abortController.abort();
   }
@@ -90,7 +92,10 @@ function Dashboard({refresh, setRefresh}) {
         const abortController = new AbortController();
         await clearTable(tableId, reservationId, abortController.signal)
           .then(() => {
-            setRefresh(!refresh);
+            // e2e testing needs a datebase refresh after, so i will just call load dashboard
+            loadDashboard()
+            
+            // setRefresh(!refresh);
           })
           .catch(setTablesError)
         
