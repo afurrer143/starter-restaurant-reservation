@@ -1,3 +1,9 @@
+// describe("US-4", () => {
+//   test('1 equals 1', () => {
+//     expect(1).toBe(1);
+//   });
+// })
+
 const puppeteer = require("puppeteer");
 const { setDefaultOptions } = require('expect-puppeteer');
 const fs = require("fs");
@@ -36,7 +42,7 @@ describe("US-04 - Seat reservation - E2E", () => {
     });
 
     test("filling and submitting form creates a new table", async () => {
-      const tableName = `#${Date.now().toString(10)}`;
+      const tableName = `#${Date.now().toString(10)} -4`;
 
       await page.type("input[name=table_name]", tableName);
       await page.type("input[name=capacity]", "6");

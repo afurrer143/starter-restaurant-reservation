@@ -45,8 +45,8 @@ function SeatReservation({ loadDashboard }) {
     const abortController = new AbortController();
     // reservationId already declared, gotten from URL params
     seatTable(tableId, reservationId, abortController.signal)
-      .then(async () => {
-        await loadDashboard();
+      .then(() => {
+        loadDashboard();
         history.goBack();
       })
       .catch(setTablesError);
@@ -62,8 +62,8 @@ function SeatReservation({ loadDashboard }) {
     const abortController = new AbortController();
     // reservationId already declared, gotten from URL params
     seatTable(tableId, reservationId, abortController.signal)
-      .then(async () => {
-        await loadDashboard();
+      .then(() => {
+        loadDashboard();
         history.push(`/dashboard?date=${date}`);
       })
       .catch(setTablesError);

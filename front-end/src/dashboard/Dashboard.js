@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { listReservations, listTables, clearTable } from "../utils/api";
+import React from "react";
+import { clearTable } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
 import ReservationCard from "./reservationCards";
 import TableCard from "./TableCards";
-import { useHistory, useLocation } from "react-router-dom";
-import { next, previous, today } from "../utils/date-time";
+import { useHistory } from "react-router-dom";
+import { next, previous } from "../utils/date-time";
 
 /**
  * Defines the dashboard page.
@@ -12,6 +12,7 @@ import { next, previous, today } from "../utils/date-time";
  *  the date for which the user wants to view reservations.
  * @returns {JSX.Element}
  */
+
 // date is by default, today's date, and is not a state. Just a string
 function Dashboard({
   loadDashboard,
@@ -42,14 +43,14 @@ function Dashboard({
 
   // Put this in button, and call it in table card, so Finish button only shows on dashboard
   // the dreaded finish button
-  function button(status, tableId, reservationId) {
-    if (status === "occupied" && reservationId && tableId) {
+  function button(status, tableId) {
+    if (status === "occupied") {
       return (
         <div>
           <button
             className={`btn btn-primary`}
             data-table-id-finish={tableId}
-            onClick={() => clearTableHandler(tableId, reservationId)}
+            onClick={() => clearTableHandler(tableId)}
           >
             Finish
           </button>
@@ -61,16 +62,13 @@ function Dashboard({
   }
 
   // the dreaded finish button function
-  function clearTableHandler(tableId, reservationId) {
+  function clearTableHandler(tableId) {
     if (window.confirm("Is this table ready to seat new guests?")) {
-      // api call to clear table
       const abortController = new AbortController();
-      clearTable(tableId, reservationId, abortController.signal)
-        .then(() => {
-          // e2e testing needs a datebase refresh after, so i will just call load dashboard
-          loadDashboard();
-        })
+      clearTable(tableId, abortController.signal)
+        .then(loadDashboard)
         .catch(setTablesError);
+      return () => abortController.abort();
     }
   }
 

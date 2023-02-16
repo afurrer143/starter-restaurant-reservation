@@ -8,15 +8,14 @@ function EditAndCancel({ reservation, loadDashboard }) {
     if (window.confirm("Do you want to cancel this reservation?")) {
       const abortController = new AbortController();
       cancelReservation(reservation.reservation_id, abortController.signal)
-        .then(async () => {
+        .then(loadDashboard)
           // and here i need to refresh the reservation cards some how
-          await loadDashboard();
-        })
         .catch(() => {
           // need some error handler of sorts here
-          console.log("ERROR HELOP OHGHWF")
-        });
-    }
+          console.log("ERROR ON CANCELLING RESERVATION")
+        })
+        return () => abortController.abort();
+      }
   }
 
   if (reservation.status !== "booked") {

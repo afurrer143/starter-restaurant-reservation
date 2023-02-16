@@ -33,7 +33,7 @@ describe("US-05 - Finish an occupied table - E2E", () => {
 
     beforeEach(async () => {
       reservation = await createReservation({
-        first_name: "Finish",
+        first_name: "Finish-5",
         last_name: Date.now().toString(10),
         mobile_number: "800-555-1313",
         reservation_date: "2035-01-01",
@@ -42,7 +42,7 @@ describe("US-05 - Finish an occupied table - E2E", () => {
       });
 
       table = await createTable({
-        table_name: `#${Date.now().toString(10)}`,
+        table_name: `#${Date.now().toString(10)}-5`,
         capacity: 99,
         reservation_id: reservation.reservation_id,
       });

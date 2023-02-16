@@ -332,11 +332,11 @@ module.exports = {
     asyncErrorBoundary(tableExist),
     validateCapacityOnSeating,
     tableIsFree,
-    seatTableAndSetStatus,
+    asyncErrorBoundary(seatTableAndSetStatus),
   ],
   emptyATable: [
     asyncErrorBoundary(tableExist),
     tableIsOccupied,
-    emptyATableAndSetStatus,
+    asyncErrorBoundary(emptyATableAndSetStatus),
   ],
 };

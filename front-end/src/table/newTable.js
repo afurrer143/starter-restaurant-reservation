@@ -23,8 +23,8 @@ function NewTable({loadDashboard}) {
     let validateError = await newTableValidator(newTable, setError)
     if (validateError === false) {
         createTable(newTable, abortController.signal)
-          .then(async () => {
-            await loadDashboard()
+          .then(() => {
+            loadDashboard()
             history.push(`/dashboard`);
           })
           .catch(setError);

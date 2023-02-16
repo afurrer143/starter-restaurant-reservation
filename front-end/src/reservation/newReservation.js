@@ -29,9 +29,10 @@ function NewReservation({loadDashboard}) {
     let validateError = await newReservationValidator(newReservation, setError)
     if (validateError === false) {
         createReservation(newReservation, abortController.signal)
-          .then(async () => {
+          .then(() => {
             //Need to redirect to dashboard, for the date of the reservation
-            await loadDashboard()
+            // GONNA TRY GETTING RID OF LOAD HERE AND SEE WHATHAPPENS
+            // loadDashboard()
             let date = newReservation.reservation_date;
             history.push(`/dashboard?date=${date}`);
           })

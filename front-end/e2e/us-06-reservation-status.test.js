@@ -33,7 +33,7 @@ describe("US-06 - Reservation status - E2E", () => {
 
     beforeEach(async () => {
       reservation = await createReservation({
-        first_name: "Status",
+        first_name: "Status-6",
         last_name: Date.now().toString(10),
         mobile_number: "800-555-1313",
         reservation_date: "2035-01-01",
@@ -42,7 +42,7 @@ describe("US-06 - Reservation status - E2E", () => {
       });
 
       table = await createTable({
-        table_name: `#${Date.now().toString(10)}`,
+        table_name: `#${Date.now().toString(10)}-6`,
         capacity: 99,
       });
 
@@ -55,6 +55,8 @@ describe("US-06 - Reservation status - E2E", () => {
       await page.reload({ waitUntil: "networkidle0" });
     });
 
+
+    // if i comment this out or the test below I pass the finish button thing. I now pass
     test("/dashboard displays status", async () => {
       await page.screenshot({
         path: ".screenshots/us-06-dashboard-displays-status.png",
@@ -70,6 +72,7 @@ describe("US-06 - Reservation status - E2E", () => {
       expect(containsBooked).toBe(true);
     });
 
+    // if i comment this out or the test above I pass the finish button thing. I now pass
     test("Seating the reservation changes status to 'seated' and hides Seat button", async () => {
       await page.screenshot({
         path: ".screenshots/us-06-seated-before.png",
@@ -99,6 +102,7 @@ describe("US-06 - Reservation status - E2E", () => {
       ).toBeNull();
     });
 
+    // the finish button test
     test("Finishing the table removes the reservation from the list", async () => {
       await seatReservation(reservation.reservation_id, table.table_id);
 

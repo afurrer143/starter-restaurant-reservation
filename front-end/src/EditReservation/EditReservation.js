@@ -5,7 +5,7 @@ import ErrorAlert from "../layout/ErrorAlert";
 import newReservationValidator from "../reservation/newReservationValidator";
 import ReservationFormComponent from "../reservation/reservationForm";
 
-function EditReservation({loadDashboard}) {
+function EditReservation({ loadDashboard }) {
   const history = useHistory();
   const routeMatch = useRouteMatch();
 
@@ -37,17 +37,16 @@ function EditReservation({loadDashboard}) {
     const abortController = new AbortController();
     setError(null);
     let reservationId = routeMatch.params.reservation_id;
-    let validateError = await newReservationValidator(newReservation, setError)
+    let validateError = await newReservationValidator(newReservation, setError);
     if (validateError === false) {
-        editReservation(reservationId, newReservation, abortController.signal)  
-            .then(() => {
-                let date = newReservation.reservation_date;
-                history.push(`/dashboard?date=${date}`);
-            })
-            .catch(setError)
+      editReservation(reservationId, newReservation, abortController.signal)
+        .then(() => {
+          let date = newReservation.reservation_date;
+          history.push(`/dashboard?date=${date}`);
+        })
+        .catch(setError);
     }
-
-
+    return () => abortController.abort();
   }
 
   if (!newReservation.reservation_id) {
@@ -57,7 +56,11 @@ function EditReservation({loadDashboard}) {
   return (
     <div>
       <ErrorAlert error={error} />
-      <ReservationFormComponent newReservation={newReservation} setNewReservation={setNewReservation} submitHandler={submitHandler} />
+      <ReservationFormComponent
+        newReservation={newReservation}
+        setNewReservation={setNewReservation}
+        submitHandler={submitHandler}
+      />
     </div>
   );
 }

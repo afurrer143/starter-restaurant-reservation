@@ -1,3 +1,9 @@
+// describe("US-8", () => {
+//   test('1 equals 1', () => {
+//     expect(1).toBe(1);
+//   });
+// })
+
 const puppeteer = require("puppeteer");
 const { setDefaultOptions } = require('expect-puppeteer');
 const fs = require("fs");
@@ -28,7 +34,7 @@ describe("US-08 - Change an existing reservation - E2E", () => {
   beforeEach(async () => {
     reservation = await createReservation({
       first_name: "Change",
-      last_name: Date.now().toString(10),
+      last_name: Date.now().toString(10) + "-8",
       mobile_number: "800-555-1616",
       reservation_date: "2035-01-04",
       reservation_time: "14:00",

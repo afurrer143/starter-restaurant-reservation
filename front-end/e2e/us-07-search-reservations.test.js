@@ -1,3 +1,9 @@
+// describe("US-7", () => {
+//   test('1 equals 1', () => {
+//     expect(1).toBe(1);
+//   });
+// })
+
 const puppeteer = require("puppeteer");
 const { setDefaultOptions } = require('expect-puppeteer');
 const fs = require("fs");

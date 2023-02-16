@@ -1,3 +1,9 @@
+// describe("US-3", () => {
+//   test('1 equals 1', () => {
+//     expect(1).toBe(1);
+//   });
+// })
+
 const puppeteer = require("puppeteer");
 const { setDefaultOptions } = require('expect-puppeteer');
 const fs = require("fs");
@@ -34,7 +40,7 @@ describe("US-03 - Create reservation on a future, working date - E2E", () => {
   describe("/reservations/new page", () => {
     beforeEach(async () => {
       await page.type("input[name=first_name]", "John");
-      await page.type("input[name=last_name]", "Doe");
+      await page.type("input[name=last_name]", "Doe-3");
       await page.type("input[name=mobile_number]", "1234567890");
       await page.type("input[name=people]", "3");
     });

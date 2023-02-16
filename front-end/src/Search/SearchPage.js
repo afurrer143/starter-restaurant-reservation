@@ -19,19 +19,26 @@ function SearchPage({ loadDashboard }) {
 
   async function submitHandler(event) {
     event.preventDefault();
-    const abortController = new AbortController();
-    setSearchError(null);
-    await searchReservationsByPhone(phoneNumberSearch, abortController.signal)
-      .then((value) => {
-        if (value.length === 0) {
-          setFoundReservations([]);
-          setNoneFound("No reservations found");
-        } else {
-          setFoundReservations(value);
-          setNoneFound(null);
-        }
-      })
-      .catch(setSearchError);
+    // if phone number search is empty, throw an error on gotta have a number (added cause for some reason if it was blank it would show cancelled reservations)
+    if (phoneNumberSearch.trim() === "") {
+      setSearchError({message: "Must input a number"})
+      setFoundReservations([]);
+    } else {
+      const abortController = new AbortController();
+      setSearchError(null);
+      await searchReservationsByPhone(phoneNumberSearch, abortController.signal)
+        .then((value) => {
+          if (value.length === 0) {
+            setFoundReservations([]);
+            setNoneFound("No reservations found");
+          } else {
+            setFoundReservations(value);
+            setNoneFound(null);
+          }
+        })
+        .catch(setSearchError);
+      return () => abortController.abort();
+    }
   }
 
   function cancelHandler() {

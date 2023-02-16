@@ -152,12 +152,12 @@ export async function seatTable(tableId, reservationId, signal) {
  * @returns {Promise<{reservation}>}
  *  a promise that sets a status on table to clear, and reservation on it to finished table.
  */
-export async function clearTable(tableId, reservationId, signal) {
+export async function clearTable(tableId, signal) {
   const url = `${API_BASE_URL}/tables/${tableId}/seat`;
   const options = {
     method: "DELETE",
     headers,
-    body: JSON.stringify({ data: {reservation_id: reservationId} }),
+    body: JSON.stringify({ data: {} }),
     signal,
   };
   // seating a table doesnt send any response back from DB
