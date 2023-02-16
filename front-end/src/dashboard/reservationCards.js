@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { formatAsTime } from "../utils/date-time";
 import EditAndCancel from "../EditReservation/editAndCancel";
 
-function ReservationCard({ reservation, refresh, setRefresh }) {
+function ReservationCard({ reservation, loadDashboard }) {
   const location = useLocation().search;
   const dateParameter = new URLSearchParams(location).get("date");
 
@@ -81,8 +81,7 @@ function ReservationCard({ reservation, refresh, setRefresh }) {
         <div>
           <EditAndCancel
             reservation={reservation}
-            refresh={refresh}
-            setRefresh={setRefresh}
+            loadDashboard={loadDashboard}
           />
         </div>
         <br />

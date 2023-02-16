@@ -13,44 +13,16 @@ import { next, previous, today } from "../utils/date-time";
  * @returns {JSX.Element}
  */
 // date is by default, today's date, and is not a state. Just a string
-function Dashboard({refresh, setRefresh}) {
-  const [reservations, setReservations] = useState([]);
-  const [reservationsError, setReservationsError] = useState(null);
-  const [tables, setTables] = useState([]);
-  const [tablesError, setTablesError] = useState(null);
-  const [date, setDate] = useState("");
-
-  const location = useLocation().search;
-  const dateParameter = new URLSearchParams(location).get("date");
-
+function Dashboard({
+  loadDashboard,
+  reservations,
+  reservationsError,
+  tables,
+  setTablesError,
+  tablesError,
+  date,
+}) {
   const history = useHistory();
-
-  
-
-  useEffect(loadDashboard, [date, dateParameter, refresh]);
-
-  function loadDashboard() {
-    const abortController = new AbortController();
-    setReservationsError(null);
-    setTablesError(null);
-    if (dateParameter !== null) {
-      setDate(dateParameter);
-    } else {
-      setDate(today());
-    }
-    // get all reservations, save in react
-    listReservations({ date }, abortController.signal)
-      .then(setReservations)
-      .catch(setReservationsError);
-
-    // and this gets all tables, saved in react
-    listTables(abortController.signal)
-      .then(setTables)
-      .catch(setTablesError);
-
-    return () => abortController.abort();
-  }
-  // so currently reservations is an array of all my reservations matching date paramenter (defaulted to today)
 
   function PageHandler(number) {
     let newDate = "";
@@ -68,106 +40,108 @@ function Dashboard({refresh, setRefresh}) {
     history.push(`/dashboard?date=${newDate}`);
   }
 
-    // Put this in button, and call it in table card, so Finish button only shows on dashboard
-    // the dreaded finish button
-    function button(status, tableId, reservationId) {
-      if (status === "occupied" && reservationId && tableId) {
-        return (
-          <div>
-            <button
-              className={`btn btn-primary`}
-              data-table-id-finish={tableId}
-              onClick={() => clearTableHandler(tableId, reservationId)}
-            >
-              Finish
-            </button>
-          </div>
-        )
-      } else {
-        return null
-      }
+  // Put this in button, and call it in table card, so Finish button only shows on dashboard
+  // the dreaded finish button
+  function button(status, tableId, reservationId) {
+    if (status === "occupied" && reservationId && tableId) {
+      return (
+        <div>
+          <button
+            className={`btn btn-primary`}
+            data-table-id-finish={tableId}
+            onClick={() => clearTableHandler(tableId, reservationId)}
+          >
+            Finish
+          </button>
+        </div>
+      );
+    } else {
+      return null;
     }
+  }
 
-    // the dreaded finish button function
-    function clearTableHandler(tableId, reservationId) {
-      if (window.confirm("Is this table ready to seat new guests?")) {
-        // api call to clear table
-        const abortController = new AbortController();
-        clearTable(tableId, reservationId, abortController.signal)
-          .then(() => {
-            // e2e testing needs a datebase refresh after, so i will just call load dashboard
-            loadDashboard()
-          })
-          .catch(setTablesError)
-      }
+  // the dreaded finish button function
+  function clearTableHandler(tableId, reservationId) {
+    if (window.confirm("Is this table ready to seat new guests?")) {
+      // api call to clear table
+      const abortController = new AbortController();
+      clearTable(tableId, reservationId, abortController.signal)
+        .then(() => {
+          // e2e testing needs a datebase refresh after, so i will just call load dashboard
+          loadDashboard();
+        })
+        .catch(setTablesError);
     }
+  }
 
   return (
-      <main>
-        <h1>Dashboard</h1>
-        <ErrorAlert error={reservationsError} />
-        <ErrorAlert error={tablesError} />
-        <div className="container">
-          <div className="row">
-            <div className="col-8">
-              <div>
-                <h4 className="mb-0">Reservations for {date}</h4>
-              </div>
-              <div>
-                {reservations.map((reservation) => (
-                  <ReservationCard
-                    key={reservation.reservation_id}
-                    reservation={reservation}
-                    refresh={refresh}
-                    setRefresh={setRefresh}
-                  />
-                ))}
-              </div>
+    <main>
+      <h1>Dashboard</h1>
+      <ErrorAlert error={reservationsError} />
+      <ErrorAlert error={tablesError} />
+      <div className="container">
+        <div className="row">
+          <div className="col-8">
+            <div>
+              <h4 className="mb-0">Reservations for {date}</h4>
             </div>
-            <div className="col-4">
-              <div>
-                <h4>Tables:</h4>
-              </div>
-              <div>
-                {tables.map((table) => (
-                  <TableCard key={table.table_id} table={table} options={button}/>
-                ))}
-              </div>
+            <div>
+              {reservations.map((reservation) => (
+                <ReservationCard
+                  key={reservation.reservation_id}
+                  reservation={reservation}
+                  loadDashboard={loadDashboard}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="col-4">
+            <div>
+              <h4>Tables:</h4>
+            </div>
+            <div>
+              {tables.map((table) => (
+                <TableCard
+                  key={table.table_id}
+                  table={table}
+                  options={button}
+                />
+              ))}
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="d-flex">
-          <div className="mr-auto p-1">
-            <button
-              type="button"
-              className="btn btn-primary mx-1"
-              onClick={() => PageHandler(-1)}
-            >
-              <i className="bi bi-arrow-left"></i> Back
-            </button>
-          </div>
-          <div className="mr-auto p-1">
-            <button
-              type="button"
-              className="btn btn-primary mx-1"
-              onClick={() => PageHandler(1)}
-            >
-              <i className="bi bi-arrow-right"></i> Next
-            </button>
-          </div>
-          <div className="mr-auto p-1">
-            <button
-              type="button"
-              className="btn btn-primary mx-1"
-              onClick={() => PageHandler(0)}
-            >
-              <i className="bi bi-calendar-day-fill"></i> Today
-            </button>
-          </div>
+      <div className="d-flex">
+        <div className="mr-auto p-1">
+          <button
+            type="button"
+            className="btn btn-primary mx-1"
+            onClick={() => PageHandler(-1)}
+          >
+            <i className="bi bi-arrow-left"></i> Back
+          </button>
         </div>
-      </main>
-
+        <div className="mr-auto p-1">
+          <button
+            type="button"
+            className="btn btn-primary mx-1"
+            onClick={() => PageHandler(1)}
+          >
+            <i className="bi bi-arrow-right"></i> Next
+          </button>
+        </div>
+        <div className="mr-auto p-1">
+          <button
+            type="button"
+            className="btn btn-primary mx-1"
+            onClick={() => PageHandler(0)}
+          >
+            <i className="bi bi-calendar-day-fill"></i> Today
+          </button>
+        </div>
+      </div>
+    </main>
   );
 }
 

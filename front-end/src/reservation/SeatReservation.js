@@ -6,7 +6,7 @@ import { seatTable } from "../utils/api";
 import TableCard from "../dashboard/TableCards";
 import ErrorAlert from "../layout/ErrorAlert";
 
-function SeatReservation({ refresh, setRefresh }) {
+function SeatReservation({ loadDashboard }) {
   const [readReservation, setReadReservations] = useState({});
   const [readReservationsError, setReadReservationsError] = useState(null);
   const [tables, setTables] = useState([]);
@@ -46,7 +46,7 @@ function SeatReservation({ refresh, setRefresh }) {
     // reservationId already declared, gotten from URL params
     seatTable(tableId, reservationId, abortController.signal)
       .then(async () => {
-        await setRefresh(!refresh);
+        await loadDashboard();
         history.goBack();
       })
       .catch(setTablesError);
@@ -63,7 +63,7 @@ function SeatReservation({ refresh, setRefresh }) {
     // reservationId already declared, gotten from URL params
     seatTable(tableId, reservationId, abortController.signal)
       .then(async () => {
-        await setRefresh(!refresh);
+        await loadDashboard();
         history.push(`/dashboard?date=${date}`);
       })
       .catch(setTablesError);

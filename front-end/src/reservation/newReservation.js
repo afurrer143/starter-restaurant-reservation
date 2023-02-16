@@ -6,7 +6,7 @@ import { createReservation } from "../utils/api";
 import newReservationValidator from "./newReservationValidator";
 import ReservationFormComponent from "./reservationForm";
 
-function NewReservation({refresh, setRefresh}) {
+function NewReservation({loadDashboard}) {
   const history = useHistory()
   
   const initialFormState = {
@@ -31,7 +31,7 @@ function NewReservation({refresh, setRefresh}) {
         createReservation(newReservation, abortController.signal)
           .then(async () => {
             //Need to redirect to dashboard, for the date of the reservation
-            await setRefresh(!refresh)
+            await loadDashboard()
             let date = newReservation.reservation_date;
             history.push(`/dashboard?date=${date}`);
           })

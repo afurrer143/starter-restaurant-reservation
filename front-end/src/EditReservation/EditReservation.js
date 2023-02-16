@@ -5,7 +5,7 @@ import ErrorAlert from "../layout/ErrorAlert";
 import newReservationValidator from "../reservation/newReservationValidator";
 import ReservationFormComponent from "../reservation/reservationForm";
 
-function EditReservation({refresh, setRefresh}) {
+function EditReservation({loadDashboard}) {
   const history = useHistory();
   const routeMatch = useRouteMatch();
 

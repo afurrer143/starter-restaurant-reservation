@@ -4,7 +4,7 @@ import ReservationCard from "../dashboard/reservationCards";
 import ErrorAlert from "../layout/ErrorAlert";
 import { searchReservationsByPhone } from "../utils/api";
 
-function SearchPage({ refresh, setRefresh }) {
+function SearchPage({ loadDashboard }) {
   // so it needs to stay on the url, and show the reservation matching number here using Table Card used in dashboard (table card is made from .map reservations, so here i get resv mathcing numb, put in array and use table Card again)
   const [phoneNumberSearch, setPhoneNumberSearch] = useState("");
   const [foundReservation, setFoundReservations] = useState([]);
@@ -23,7 +23,6 @@ function SearchPage({ refresh, setRefresh }) {
     setSearchError(null);
     await searchReservationsByPhone(phoneNumberSearch, abortController.signal)
       .then((value) => {
-        console.log(value);
         if (value.length === 0) {
           setFoundReservations([]);
           setNoneFound("No reservations found");

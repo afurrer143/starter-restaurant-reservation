@@ -1,13 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-import { Redirect, Route, Switch } from "react-router-dom";
+import { Redirect, Route, Switch, useLocation } from "react-router-dom";
+import { listReservations, listTables } from "../utils/api";
 import Dashboard from "../dashboard/Dashboard";
 import NotFound from "./NotFound";
 import NewReservation from "../reservation/newReservation";
 import NewTable from "../table/newTable";
 import SeatReservation from "../reservation/SeatReservation";
 import SearchPage from "../Search/SearchPage";
-
 import { today } from "../utils/date-time";
 import EditReservation from "../EditReservation/EditReservation";
 
@@ -19,7 +19,36 @@ import EditReservation from "../EditReservation/EditReservation";
  * @returns {JSX.Element}
  */
 function Routes() {
-  const [refresh, setRefresh] = useState(false);
+  const [reservations, setReservations] = useState([]);
+  const [reservationsError, setReservationsError] = useState(null);
+  const [tables, setTables] = useState([]);
+  const [tablesError, setTablesError] = useState(null);
+  const [date, setDate] = useState("");
+  const location = useLocation().search;
+  const dateParameter = new URLSearchParams(location).get("date");
+
+  function loadDashboard() {
+    const abortController = new AbortController();
+    setReservationsError(null);
+    setTablesError(null);
+    if (dateParameter !== null) {
+      setDate(dateParameter);
+    } else {
+      setDate(today());
+    }
+    // get all reservations, save in react
+    listReservations({ date }, abortController.signal)
+      .then(setReservations)
+      .catch(setReservationsError);
+
+    // and this gets all tables, saved in react
+    listTables(abortController.signal).then(setTables).catch(setTablesError);
+
+    return () => abortController.abort();
+  }
+
+  useEffect(loadDashboard, [date, dateParameter]);
+   // so currently reservations is an array of all my reservations matching date paramenter (defaulted to today)
 
   return (
     <Switch>
@@ -29,24 +58,31 @@ function Routes() {
       <Route exact={true} path="/reservations">
         <Redirect to={"/dashboard"} />
       </Route>
-      {/* I feel like my routes go here */}
       <Route exact={true} path="/reservations/new">
-        <NewReservation refresh={refresh} setRefresh={setRefresh} />
+        <NewReservation loadDashboard={loadDashboard} />
       </Route>
       <Route exact={true} path="/reservations/:reservation_id/seat">
-        <SeatReservation refresh={refresh} setRefresh={setRefresh} />
+        <SeatReservation loadDashboard={loadDashboard} />
       </Route>
       <Route exact={true} path="/reservations/:reservation_id/edit">
-        <EditReservation refresh={refresh} setRefresh={setRefresh} />
+        <EditReservation loadDashboard={loadDashboard} />
       </Route>
       <Route exact={true} path="/tables/new">
-        <NewTable refresh={refresh} setRefresh={setRefresh} />
+        <NewTable loadDashboard={loadDashboard} />
       </Route>
       <Route exact={true} path="/search">
-        <SearchPage refresh={refresh} setRefresh={setRefresh} />
+        <SearchPage loadDashboard={loadDashboard} />
       </Route>
       <Route path="/dashboard">
-        <Dashboard refresh={refresh} setRefresh={setRefresh} />
+        <Dashboard
+          loadDashboard={loadDashboard}
+          reservations={reservations}
+          reservationsError={reservationsError}
+          tables={tables}
+          tablesError={tablesError}
+          setTablesError={setTablesError}
+          date={date}
+        />
       </Route>
       <Route>
         <NotFound />
