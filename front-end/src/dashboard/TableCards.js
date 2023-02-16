@@ -35,7 +35,6 @@ function TableCard({ table, buttonOptions, loadDashboard }) {
   };
 
   const getFinishButton = (table) => {
-    if (table.reservation_id) {
       return (
         <div>
           <button
@@ -47,11 +46,10 @@ function TableCard({ table, buttonOptions, loadDashboard }) {
           </button>
         </div>
       );
-    } else {
-      return null;
     }
   };
 
+  // finish table handler. Sets table to free and reservation status to "occupied"
   const clearTableHandler = (tableId) => {
     if (window.confirm("Is this table ready to seat new guests?")) {
       const abortController = new AbortController();
