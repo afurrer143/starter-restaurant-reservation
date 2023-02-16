@@ -1,50 +1,79 @@
 import { formatAsTime } from "../utils/date-time";
 import React from "react";
+import { clearTable } from "../utils/api";
 
-// option is a button param (pretty bad name i know) to allow an optional button to show depending where TableCard is called
-// i really should make a thing, where when it has a reservation_id (or could use status, but reservation_id is more bug proof) that it shows info from the reservation too
-function TableCard({ table, options }) {
-  let bgColor = "bg-info-subtle";
-  if (table.table_status === "free") {
-    bgColor = "bg-info-subtle";
-  } else if (table.table_status === "occupied") {
-    bgColor = "bg-warning";
-  } else {
-    bgColor = "bg-danger";
-  }
+function TableCard({ table, buttonOptions, loadDashboard }) {
 
-  let button = null;
-  if (options) {
-    button = options(table.table_status, table.table_id, table.reservation_id);
-  }
-
-  if (table.reservation_id) {
-    return (
-      <div className="card my-3">
-        <div className={`card-body ${bgColor}`}>
-          {/* not sure how i feel about status here, may remove it */}
-          <p className="card-text">Table: {table.table_name} Used by: {table.first_name} {table.last_name}</p>
-          <p className="card-text">Current Capacity: {table.people} out of {table.capacity} </p>
+  const getCardText = (table) => {
+    if (table.reservation_id) {
+      return (
+        <>
+          <p className="card-text">
+            Table: {table.table_name} Used by: {table.first_name}{" "}
+            {table.last_name}
+          </p>
+          <p className="card-text">
+            Current Capacity: {table.people} out of {table.capacity}{" "}
+          </p>
           <p className="card-text" data-table-id-status={table.table_id}>
             Status: <span>{table.table_status}</span>
           </p>
           <p> Seated at: {formatAsTime(table.reservation_time)} </p>
-          {button}
+        </>
+      );
+    } else {
+      return (
+        <>
+          <p className="card-text">Table: {table.table_name}</p>
+          <p className="card-text">Capacity: {table.capacity}</p>
+          <p className="card-text" data-table-id-status={table.table_id}>
+            Status: <span>{table.table_status}</span>
+          </p>
+        </>
+      );
+    }
+  };
+
+  const getFinishButton = (table) => {
+    if (table.reservation_id) {
+      return (
+        <div>
+          <button
+            className={`btn btn-primary`}
+            data-table-id-finish={table.table_id}
+            onClick={() => clearTableHandler(table.table_id)}
+          >
+            Finish
+          </button>
         </div>
-      </div>
-    );
-  }
+      );
+    } else {
+      return null;
+    }
+  };
+
+  const clearTableHandler = (tableId) => {
+    if (window.confirm("Is this table ready to seat new guests?")) {
+      const abortController = new AbortController();
+      clearTable(tableId, abortController.signal)
+        .then(loadDashboard)
+        .catch((error) => console.log("error", error));
+      return () => abortController.abort();
+    }
+  };
+
+  const bgColor = table.table_status === "free" ? "bg-info-subtle" :
+    table.table_status === "occupied" ? "bg-warning" : "bg-danger";
+
+  const button = buttonOptions ? buttonOptions(table.table_status, table.table_id, table.reservation_id) : null;
+  const finishButton = getFinishButton(table);
 
   return (
     <div className="card my-3">
       <div className={`card-body ${bgColor}`}>
-        {/* not sure how i feel about status here, may remove it */}
-        <p className="card-text">Table: {table.table_name}</p>
-        <p className="card-text">Capacity: {table.capacity}</p>
-        <p className="card-text" data-table-id-status={table.table_id}>
-          Status: <span>{table.table_status}</span>
-        </p>
+        {getCardText(table)}
         {button}
+        {finishButton}
       </div>
     </div>
   );

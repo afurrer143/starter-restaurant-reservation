@@ -1,5 +1,4 @@
 import React from "react";
-import { clearTable } from "../utils/api";
 import ErrorAlert from "../layout/ErrorAlert";
 import ReservationCard from "./reservationCards";
 import TableCard from "./TableCards";
@@ -19,7 +18,6 @@ function Dashboard({
   reservations,
   reservationsError,
   tables,
-  setTablesError,
   tablesError,
   date,
 }) {
@@ -43,34 +41,34 @@ function Dashboard({
 
   // Put this in button, and call it in table card, so Finish button only shows on dashboard
   // the dreaded finish button
-  function button(status, tableId) {
-    if (status === "occupied") {
-      return (
-        <div>
-          <button
-            className={`btn btn-primary`}
-            data-table-id-finish={tableId}
-            onClick={() => clearTableHandler(tableId)}
-          >
-            Finish
-          </button>
-        </div>
-      );
-    } else {
-      return null;
-    }
-  }
+  // function button(status, tableId) {
+  //   if (status === "occupied") {
+  //     return (
+  //       <div>
+  //         <button
+  //           className={`btn btn-primary`}
+  //           data-table-id-finish={tableId}
+  //           onClick={() => clearTableHandler(tableId)}
+  //         >
+  //           Finish
+  //         </button>
+  //       </div>
+  //     );
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
-  // the dreaded finish button function
-  function clearTableHandler(tableId) {
-    if (window.confirm("Is this table ready to seat new guests?")) {
-      const abortController = new AbortController();
-      clearTable(tableId, abortController.signal)
-        .then(loadDashboard)
-        .catch(setTablesError);
-      return () => abortController.abort();
-    }
-  }
+  // // the dreaded finish button function
+  // function clearTableHandler(tableId) {
+  //   if (window.confirm("Is this table ready to seat new guests?")) {
+  //     const abortController = new AbortController();
+  //     clearTable(tableId, abortController.signal)
+  //       .then(loadDashboard)
+  //       .catch(setTablesError);
+  //     return () => abortController.abort();
+  //   }
+  // }
 
   return (
     <main>
@@ -102,7 +100,7 @@ function Dashboard({
                 <TableCard
                   key={table.table_id}
                   table={table}
-                  options={button}
+                  loadDashboard={loadDashboard}
                 />
               ))}
             </div>

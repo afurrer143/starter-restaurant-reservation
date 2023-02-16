@@ -157,7 +157,6 @@ export async function clearTable(tableId, signal) {
   const options = {
     method: "DELETE",
     headers,
-    body: JSON.stringify({ data: {} }),
     signal,
   };
   // seating a table doesnt send any response back from DB

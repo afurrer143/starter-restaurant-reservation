@@ -105,6 +105,10 @@ describe("US-06 - Reservation status - E2E", () => {
     // the finish button test
     test("Finishing the table removes the reservation from the list", async () => {
       await seatReservation(reservation.reservation_id, table.table_id);
+      
+      // for my self
+
+      console.log(`Seated reservation ${reservation.reservation_id} at table ${table.table_id} with name of ${table.table_name}`)
 
       await page.reload({ waitUntil: "networkidle0" });
 
@@ -119,6 +123,8 @@ describe("US-06 - Reservation status - E2E", () => {
       page.on("dialog", async (dialog) => {
         await dialog.accept();
       });
+
+      console.log(`Finish button selector is IN US-6 ${finishButtonSelector}`)
 
       await page.click(finishButtonSelector);
 
