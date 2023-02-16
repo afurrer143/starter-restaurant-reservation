@@ -35,6 +35,7 @@ function TableCard({ table, buttonOptions, loadDashboard }) {
   };
 
   const getFinishButton = (table) => {
+    if (table.reservation_id) {
       return (
         <div>
           <button
@@ -46,6 +47,8 @@ function TableCard({ table, buttonOptions, loadDashboard }) {
           </button>
         </div>
       );
+    } else {
+      return null;
     }
   };
 
