@@ -29,9 +29,9 @@ function NewReservation({refresh, setRefresh}) {
     let validateError = await newReservationValidator(newReservation, setError)
     if (validateError === false) {
         createReservation(newReservation, abortController.signal)
-          .then(() => {
+          .then(async () => {
             //Need to redirect to dashboard, for the date of the reservation
-            setRefresh(!refresh)
+            await setRefresh(!refresh)
             let date = newReservation.reservation_date;
             history.push(`/dashboard?date=${date}`);
           })

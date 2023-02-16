@@ -46,7 +46,7 @@ function Routes() {
         <SearchPage refresh={refresh} setRefresh={setRefresh} />
       </Route>
       <Route path="/dashboard">
-        <Dashboard refresh={refresh} setRefresh={setRefresh} date={today()} />
+        <Dashboard refresh={refresh} setRefresh={setRefresh} />
       </Route>
       <Route>
         <NotFound />

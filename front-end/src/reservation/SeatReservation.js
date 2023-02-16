@@ -45,8 +45,8 @@ function SeatReservation({ refresh, setRefresh }) {
     const abortController = new AbortController();
     // reservationId already declared, gotten from URL params
     seatTable(tableId, reservationId, abortController.signal)
-      .then(() => {
-        setRefresh(!refresh);
+      .then(async () => {
+        await setRefresh(!refresh);
         history.goBack();
       })
       .catch(setTablesError);
@@ -62,8 +62,8 @@ function SeatReservation({ refresh, setRefresh }) {
     const abortController = new AbortController();
     // reservationId already declared, gotten from URL params
     seatTable(tableId, reservationId, abortController.signal)
-      .then(() => {
-        setRefresh(!refresh);
+      .then(async () => {
+        await setRefresh(!refresh);
         history.push(`/dashboard?date=${date}`);
       })
       .catch(setTablesError);

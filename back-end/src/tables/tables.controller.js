@@ -238,6 +238,7 @@ function tableIsOccupied(req, res, next) {
 function ifResevationIdPresentStatusIsOccupied(req, res, next) {
   if (req.body.data.reservation_id) {
     req.body.data.table_status = "occupied";
+    // set its reservation to "seated"
     return next();
   }
   next();

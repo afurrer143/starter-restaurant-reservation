@@ -71,19 +71,20 @@ function Dashboard({refresh, setRefresh}) {
     // Put this in button, and call it in table card, so Finish button only shows on dashboard
     // the dreaded finish button
     function button(status, tableId, reservationId) {
-      if (status === "occupied") {
+      if (status === "occupied" && reservationId && tableId) {
         return (
           <div>
             <button
               className={`btn btn-primary`}
-              type="submit"
               data-table-id-finish={tableId}
               onClick={() => clearTableHandler(tableId, reservationId)}
             >
               Finish
             </button>
           </div>
-        );
+        )
+      } else {
+        return null
       }
     }
 
@@ -98,7 +99,6 @@ function Dashboard({refresh, setRefresh}) {
             loadDashboard()
           })
           .catch(setTablesError)
-        
       }
     }
 

@@ -8,12 +8,13 @@ function EditAndCancel({ reservation, refresh, setRefresh }) {
     if (window.confirm("Do you want to cancel this reservation?")) {
       const abortController = new AbortController();
       cancelReservation(reservation.reservation_id, abortController.signal)
-        .then(() => {
+        .then(async () => {
           // and here i need to refresh the reservation cards some how
-          setRefresh(!refresh);
+          await setRefresh(!refresh);
         })
         .catch(() => {
           // need some error handler of sorts here
+          console.log("ERROR HELOP OHGHWF")
         });
     }
   }

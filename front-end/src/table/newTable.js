@@ -23,9 +23,8 @@ function NewTable({refresh, setRefresh}) {
     let validateError = await newTableValidator(newTable, setError)
     if (validateError === false) {
         createTable(newTable, abortController.signal)
-          .then(() => {
-            setNewTable({ ...initialFormState })
-            setRefresh(!refresh)
+          .then(async () => {
+            await setRefresh(!refresh)
             history.push(`/dashboard`);
           })
           .catch(setError);
