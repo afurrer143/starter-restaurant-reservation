@@ -170,7 +170,7 @@ function SeatReservation({ loadDashboard }) {
         <div>
           {tables.map((table) => (
             // since i need a button on the tables, but i am just calling TableCard, and do not want button on the dashboard, I will just give it a buttom param it is called with
-            <TableCard key={table.table_id} table={table} options={button} />
+            <TableCard key={table.table_id} table={table} buttonOptions={button} />
           ))}
         </div>
       </div>
