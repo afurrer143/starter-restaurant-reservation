@@ -9,16 +9,14 @@ function TableCard({ table, buttonOptions, loadDashboard }) {
       return (
         <>
           <p className="card-text">
-            Table: {table.table_name} Used by: {table.first_name}{" "}
-            {table.last_name}
+            Table: {table.table_name} Used by: {table.first_name} {table.last_name}
           </p>
           <p className="card-text">
-            Current Capacity: {table.people} out of {table.capacity}{" "}
+            Current Capacity: {table.people} out of {table.capacity}
           </p>
           <p className="card-text" data-table-id-status={table.table_id}>
-            Status: <span>{table.table_status}</span>
+            Status: <span>{table.table_status}</span> as of: {formatAsTime(table.reservation_time)}
           </p>
-          <p> Seated at: {formatAsTime(table.reservation_time)} </p>
         </>
       );
     } else {
@@ -60,6 +58,8 @@ function TableCard({ table, buttonOptions, loadDashboard }) {
         .then(loadDashboard)
         .catch((error) => console.log("error", error));
       return () => abortController.abort();
+    } else{
+      return null
     }
   };
 

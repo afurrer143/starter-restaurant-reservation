@@ -84,7 +84,7 @@ describe("US-05 - Finish an occupied table - E2E", () => {
           await dialog.accept();
         });
         
-        console.log(`Finish button selector is IN US-5 ${finishButtonSelector}`);
+      console.log(`Finish button selector is IN US-5 ${finishButtonSelector}`);
 
       await page.click(finishButtonSelector);
 

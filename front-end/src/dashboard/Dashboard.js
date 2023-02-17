@@ -39,45 +39,14 @@ function Dashboard({
     history.push(`/dashboard?date=${newDate}`);
   }
 
-  // Put this in button, and call it in table card, so Finish button only shows on dashboard
-  // the dreaded finish button
-  // function button(status, tableId) {
-  //   if (status === "occupied") {
-  //     return (
-  //       <div>
-  //         <button
-  //           className={`btn btn-primary`}
-  //           data-table-id-finish={tableId}
-  //           onClick={() => clearTableHandler(tableId)}
-  //         >
-  //           Finish
-  //         </button>
-  //       </div>
-  //     );
-  //   } else {
-  //     return null;
-  //   }
-  // }
-
-  // // the dreaded finish button function
-  // function clearTableHandler(tableId) {
-  //   if (window.confirm("Is this table ready to seat new guests?")) {
-  //     const abortController = new AbortController();
-  //     clearTable(tableId, abortController.signal)
-  //       .then(loadDashboard)
-  //       .catch(setTablesError);
-  //     return () => abortController.abort();
-  //   }
-  // }
-
   return (
     <main>
-      <h1>Dashboard</h1>
       <ErrorAlert error={reservationsError} />
       <ErrorAlert error={tablesError} />
       <div className="container">
+      <h1>Dashboard</h1>
         <div className="row">
-          <div className="col-8">
+          <div className="col-6">
             <div>
               <h4 className="mb-0">Reservations for {date}</h4>
             </div>
@@ -91,7 +60,7 @@ function Dashboard({
               ))}
             </div>
           </div>
-          <div className="col-4">
+          <div className="col-6">
             <div>
               <h4>Tables:</h4>
             </div>

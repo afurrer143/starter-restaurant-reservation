@@ -103,6 +103,7 @@ describe("US-06 - Reservation status - E2E", () => {
     });
 
     // the finish button test
+    // my current hunch since it fails on the SECOND time it tries to click finish button (NOTE: page.click await for some event to happen so even if the thing)
     test("Finishing the table removes the reservation from the list", async () => {
       await seatReservation(reservation.reservation_id, table.table_id);
       
