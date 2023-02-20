@@ -18,6 +18,7 @@ function ReservationFormComponent({newReservation, setNewReservation, submitHand
 
   return (
     <div>
+      <div className="container-md">
       <form onSubmit={submitHandler}>
         <fieldset className="mb-2">
           <div className="form-group">
@@ -132,6 +133,7 @@ function ReservationFormComponent({newReservation, setNewReservation, submitHand
         >
           <i className="bi bi-x-lg"></i> Cancel
         </button>
+      </div>
       </div>
     </div>
   );

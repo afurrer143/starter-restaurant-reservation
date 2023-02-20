@@ -44,7 +44,10 @@ function NewReservation({loadDashboard}) {
   return (
     <div>
       <ErrorAlert error={error} />
-      <ReservationFormComponent newReservation={newReservation} setNewReservation={setNewReservation} submitHandler={submitHandler} />
+      <ReservationFormComponent 
+      newReservation={newReservation} 
+      setNewReservation={setNewReservation} 
+      submitHandler={submitHandler} />
     </div>
   );
 }
