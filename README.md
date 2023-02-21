@@ -3,6 +3,14 @@
 
 This is a full stack application to create a reservation system for a dine-in restaurant. The application allows a hostess to seat customers and create reservations.
 
+## Live preview and screenshots
+
+Live Site is at [here](https://restaurant-frontend-5eh3.onrender.com/)
+
+### Dashboard
+
+![image of dashboard](/screenshots/dashboard.png)
+
 ## Technologies Used
 
 + React.js for the front-end
@@ -14,9 +22,13 @@ This is a full stack application to create a reservation system for a dine-in re
 
 To get started with this project, you will need to follow these steps:
 
-1. Clone this repository to your local machine
-2. Install the necessary dependencies using the command npm install
-3. Start the application using the command npm start
+1. Create at least one postgreSQL database (up to four for testing, dev, preview, prod)
+2. Clone this repository to your local machine
+3. Install the necessary dependencies using the command npm install
+4. Run `cp ./back-end/.env.sample ./back-end/.env`
+5. Update the `.back-end/.env` file with the connection URL to your own postgreSQL database(s)
+6. Run `cp ./front-end/.env.sample ./front-end/.env` You only need to edit this file if you need to connect to a backend location other than `http://localhost:5001` which is the default port for the backend
+6. Start the application using the command `npm start` or `npm run start:dev`
 
 ## Features
 
