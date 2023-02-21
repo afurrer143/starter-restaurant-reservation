@@ -11,6 +11,20 @@ Live Site is at [here](https://restaurant-frontend-5eh3.onrender.com/)
 
 ![image of dashboard](/screenshots/dashboard.png)
 
+### Seating Reservation
+
+![image of seating page](/screenshots/seating.png)
+
+### Creating New Reservation
+
+![image of new reservation page](/screenshots/newReservation.png)
+
+### Search page
+
+![image of search page with no input](/screenshots/searchEmpty.png)
+
+![image of search page](/screenshots/search.png)
+
 ## Technologies Used
 
 + React.js for the front-end
